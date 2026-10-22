@@ -17,6 +17,8 @@ RankProbe is a local, model-free audit tool for recommendation and retrieval exp
 
 [中文说明](README.zh-CN.md) · [Input contract](docs/input-format.md) · [Metric semantics](docs/metrics.md) · [CLI / Python API](docs/usage.md) · [First local report](docs/try-it.md) · [Limitations](docs/limitations.md)
 
+For a source-only first report with **your own files**, run `python quickstart.py --input predictions.csv`, or repeat `--run NAME=FILE` for a comparison. Optional qrels, cutoffs and format flags are documented in [Start here](START_HERE.md). This installs nothing, preserves inputs and keeps missing labels unknown. The immutable alpha-4 download predates this launcher. Development follows [product tasks and acceptance](docs/product-scope.md).
+
 Using BEIR? The [export/evaluation recipe](docs/beir-workflow.md) preserves the retrieved snapshot, makes self-match filtering and export depth explicit, and transfers existing qrels without inventing labels.
 
 Using RecBole nonsequential full-sort scores? The [safe export recipe](docs/recbole-workflow.md) records padding/history exclusions, preserves external tokens and rejects unexpected nonfinite scores without inventing judgments.

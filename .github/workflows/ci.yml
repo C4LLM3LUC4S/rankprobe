@@ -44,6 +44,12 @@ jobs:
         # Source preview precedes installation and does not alter the environment.
         run: python quickstart.py --no-open --out "${{ runner.temp }}/rankprobe-source-preview"
         working-directory: ${{ steps.package.outputs.root }}
+      - name: Compare source files before installing development dependencies
+        run: >-
+          python quickstart.py --run baseline=examples/trec/baseline.run
+          --run reordered=examples/trec/reordered.run --qrels examples/trec/judgments.qrels
+          --cutoffs 1,2 --no-open --out "${{ runner.temp }}/rankprobe-own-file-preview"
+        working-directory: ${{ steps.package.outputs.root }}
       - name: Install development dependencies
         working-directory: ${{ steps.package.outputs.root }}
         run: python -m pip install -e ".[dev,adapters]"

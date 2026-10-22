@@ -81,6 +81,8 @@ python -m rankprobe compare --run baseline=examples/clean.csv --run changed=exam
 
 ## 输入自己的结果
 
+源码免安装入口也支持自己的文件：`python quickstart.py --input predictions.csv`，或用两次 `--run NAME=FILE` 比较。可加已有 `--qrels` 和 `--cutoffs`，自动打开新报告；详见[开始使用](START_HERE.md#直接检查自己的文件)。沿用核心默认协议；更多协议选项仍用完整 CLI。原 alpha-4 离线包不包含这个新入口。
+
 每行是一次排序事件中的一个候选项。`query_id` 表示事件，不应直接把同一用户的不同时刻合并成一个查询。
 
 ```csv
@@ -133,6 +135,8 @@ python -m rankprobe audit local_export.csv --out reports/local-export
 RankProbe 不保证与任意框架输出相同。默认同分规则是物品 ID 字符串升序，与 `trec_eval` 的规则不同。已有公共问题只用作背景，不声称发现了新漏洞或替代上游修复，见 [案例来源](docs/known-cases.md)。新增的 [trec_eval 独立交叉验证](docs/trec-reference.md) 提供可复现检查：共同协议下核对数值，协议不同时保留并解释差异，不能为了对齐结果而随意补零或宣称标签完整。
 
 ## 当前阶段
+
+后续以[产品任务与验收](docs/product-scope.md)为准：让使用者接入自己的导出、理解可行动发现并复核，而不是只增加指标和示例。独立采用、真实发现与人工节时仍各需证据。
 
 `0.1.0a4` 的 [工程首版范围](docs/initial-delivery.md) 已收口，后续优先处理可复现错误、安装或导出障碍、文档歧义及依赖兼容性。当前不要求使用者为了试用而新做实验：没有自己的预测文件时，使用随源码提供的 demo 和首次报告示例即可；有合法导出后再按现有适配说明接入。
 

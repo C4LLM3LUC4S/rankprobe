@@ -12,6 +12,21 @@ python quickstart.py
 
 先读报告中的发现及建议行动。示例中的同分和重复是有意放入的控制案例；缺失标签仍为未知。数值只能在声明的指标、可算查询和参考范围中解读，不能据此认证模型质量。
 
+## 直接检查自己的文件
+
+源码入口也能不安装就检查自己的合法导出。文件路径相对于终端目录，带空格时加引号：
+
+```powershell
+python quickstart.py --input "my exports/predictions.csv"
+python quickstart.py --run "before=my exports/before.run" --run "after=my exports/after.run" --qrels "my exports/judgments.qrels" --cutoffs 1,5,10
+```
+
+第一条核查单文件，第二条比较两个运行。CSV/JSONL 需要 `query_id,item_id,score`，标签可选；`.run`/`.qrels` 可直接读。TREC 内容的 `.txt` 加 `--input-format trec` 和（提供 qrels 时）`--qrels-format trec`。无标签仍能查重复、同分与集合变化；指标可能不可用，不会自动补零或声明标签完整。高级协议用完整 CLI，见[使用说明](docs/usage.md)。
+
+每次默认用新目录，原文件只读。退出码 1 表示报告完成且含错误级发现，仍会显示报告路径；2 表示命令、输入或输出失败。按[发现→行动→复核](docs/case-actions.md)处理问题。原 alpha-4 离线资产早于这个源码入口，不包含新参数。
+
 With Python 3.10+, extract the complete source ZIP and run `python quickstart.py`. It previews the checked-out source with a built-in synthetic fixture, creates a unique report folder and opens the local HTML. It installs nothing and does not alter an existing environment. Use `--no-open` on headless systems, or `--out` with a new writable folder. For installation and real exports, follow the [main guide](README.md).
 
 Verified alpha-4 offline packages remain at their [original release location](https://github.com/C4LLM3LUC4S/rechorus-patt-reproduction/releases/tag/v0.1.0a4). Those archives are immutable and predate this source convenience launcher.
+
+Use `python quickstart.py --input predictions.csv` for your own file, or repeat `--run NAME=FILE` at least twice to compare. Optional `--qrels`, `--cutoffs` and explicit format flags use the existing parser. Unknown labels remain unknown. Exit 1 still produces a report; exit 2 is a failed operation. See [product tasks and acceptance](docs/product-scope.md).
