@@ -518,7 +518,8 @@ def _finding_evidence(code: str, evidence: Any) -> str:
             return (
                 _diagnostics(counts, EVIDENCE_LIMIT)
                 + '<p lang="zh-CN">下面是检查程序保留的同分样例，不是全部同分组；'
-                '每组候选标识也可能只保留或展示了一部分。完整 JSON 保存的是程序实际记录的证据。</p>'
+                '每组候选标识也可能只保留或展示了一部分。这里的小数会缩短显示，核对原始精度请看 JSON 或原始分数文件。'
+                '完整 JSON 保存的是程序实际记录的证据。</p>'
                 + _table(rows, EVIDENCE_LIMIT)
             )
     return _diagnostics(evidence, EVIDENCE_LIMIT)
