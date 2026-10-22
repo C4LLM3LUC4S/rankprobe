@@ -36,9 +36,9 @@ def main():
     label = datetime.now().strftime("%Y%m%d-%H%M%S") + "-" + uuid.uuid4().hex[:6]
     output = args.out.resolve() if args.out else root / "reports" / ("first-report-" + label)
     if output.exists():
-        parser.exit(2, "Output already exists. Choose a new --out folder; existing reports are preserved.\n")
+        parser.exit(2, "输出文件夹已存在，请用 --out 指定新文件夹；旧报告会保留。 / Output already exists; choose a new --out folder.\n")
     from rankprobe.cli import main as run
-    print("RankProbe source preview / 源码预览；不安装依赖，不修改已有环境。")
+    print("RankProbe：直接运行本地源码，不会安装软件或改动现有环境。 / Running local source; no installation.")
     if args.input:
         command = ["audit", str(args.input)]
     elif args.run:
@@ -47,9 +47,9 @@ def main():
             command.extend(["--run", entry])
     else:
         command = ["demo"]
-        print("Synthetic example / 合成示例：同分、重复候选和未知标签，并非模型评测。")
+        print("先看一个演示：数据中有意放入了同分、重复项目和缺失标签。 / Synthetic demonstration.")
     if args.input or args.run:
-        print("Local files / 本地文件：仅生成本地报告；缺失标签保持未知，分享前检查报告中的标识符。")
+        print("正在读取本地文件。没有标签的项目会保持未知；分享报告前，请检查其中的查询和项目编号。 / Local files; unknown labels stay unknown.")
     for option, value in (("--qrels", args.qrels), ("--cutoffs", args.cutoffs),
                           ("--input-format", args.input_format), ("--qrels-format", args.qrels_format)):
         if value is not None and value != "auto":
@@ -62,14 +62,14 @@ def main():
     if status not in (0, 1):
         return status
     if status == 1:
-        print("Report completed with error findings / 报告已生成并包含错误级发现；请先检查报告。")
+        print("报告已生成，其中有需要优先处理的问题。请打开报告查看原因和下一步。 / Report completed with error findings.")
     report = (output / "report.html").resolve()
-    print("Open report / 打开报告：" + str(report))
+    print("报告已保存，打开这个文件即可查看 / Report: " + str(report))
     if not args.no_open:
         try:
             webbrowser.open(report.as_uri())
         except (OSError, webbrowser.Error):
-            print("Browser unavailable. Open the HTML file at the printed location.")
+            print("浏览器没有自动打开，请手动打开上方的 HTML 文件。 / Open the printed HTML file.")
     return status
 
 

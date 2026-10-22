@@ -1,8 +1,8 @@
 # RankProbe · 排名评测核查
 
-**检查推荐与检索评测中的同分、重复候选和集合变化，用本地报告复核指标差异。**
+**评测分数变了，是排序变好了，还是比较条件变了？**
 
-**Inspect score ties, duplicate candidates and changed evaluation pools in recommendation and retrieval experiments. Trace metric differences with local HTML/JSON reports.**
+**Did the ranking improve, or did the evaluation change? Check with a local report.**
 
 > This standalone repository contains RankProbe only. The verified alpha-4 downloads below remain at their original release location, with unchanged bytes and provenance.
 > 此独立仓库只包含 RankProbe。下方已验证的 alpha-4 下载保留在原发行地址，文件与来源记录不变；本次源码迁移不冒充新版本发行。
@@ -11,7 +11,7 @@
 
 **Find out when a ranking score depends on ties, duplicated candidates, or a changed evaluation pool.**
 
-RankProbe is a local, model-free audit tool for recommendation and retrieval experiments. Give it candidate scores and optional relevance judgments; it produces a readable HTML report and machine-readable JSON with examples, metric assumptions, and sensitivity results. No model inference, cloud account, or API key is needed. The core uses the Python standard library.
+Give RankProbe your exported recommendation or retrieval scores. It checks for tied scores, repeated items, missing queries and changed candidate sets, then shows what to inspect next. You get a local HTML report to read and JSON for further analysis. Relevance labels are optional: without them, structural checks still work, while label-dependent scores may be unavailable. It uses the Python standard library and needs no model inference, cloud account or API key.
 
 **[Download the complete offline bundle](https://github.com/C4LLM3LUC4S/rechorus-patt-reproduction/releases/download/v0.1.0a4/RankProbe-0.1.0a4.zip)** · [Release notes and checksums](https://github.com/C4LLM3LUC4S/rechorus-patt-reproduction/releases/tag/v0.1.0a4). Extract it and open `START_HERE.md`; no Git or package-index connection is needed to install its bundled wheel. [Public source](https://github.com/C4LLM3LUC4S/rankprobe) is on the default branch.
 

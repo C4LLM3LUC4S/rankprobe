@@ -28,7 +28,7 @@ def test_default_demo_remains_available_without_own_file_options(tmp_path):
     report = json.loads((output / "report.json").read_text(encoding="utf-8"))
     assert report["provenance"]["command"] == "demo"
     assert "demo_note" in report
-    assert "Synthetic example" in process.stdout
+    assert "Synthetic demonstration" in process.stdout
 
 
 def test_own_score_file_from_unrelated_directory_preserves_unknowns_and_inputs(tmp_path):
@@ -42,7 +42,7 @@ def test_own_score_file_from_unrelated_directory_preserves_unknowns_and_inputs(t
     assert report["provenance"]["command"] == "audit"
     assert report["provenance"]["sources"][0]["sha256"] == before
     assert "demo_note" not in report
-    assert "Synthetic example" not in process.stdout
+    assert "Synthetic demonstration" not in process.stdout
     assert digest(source) == before
     assert (out / "report.html").is_file()
     # Exact label semantics are checked through the existing report, never imputed by the launcher.
@@ -104,4 +104,4 @@ def test_completed_error_findings_still_print_the_report_location(tmp_path):
     assert process.returncode == 1, (process.stdout, process.stderr)
     assert (out / "report.html").is_file()
     assert "Report completed with error findings" in process.stdout
-    assert "Open report" in process.stdout
+    assert str(out / "report.html") in process.stdout

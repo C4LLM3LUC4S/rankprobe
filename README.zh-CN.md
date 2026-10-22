@@ -2,14 +2,11 @@
 
 第一次想直接看看：完整解压本仓库，运行 `python quickstart.py`。不安装依赖、不联网下载，自动生成并打开合成示例报告，旧报告保留。详见 [开始使用](START_HERE.md)；这是源码预览，正式安装路径仍见下文。
 
-**检查推荐与检索评测中的同分、重复候选和集合变化，用本地报告复核指标差异。**
+**评测分数变了，是排序变好了，还是比较条件变了？**
 
-**Inspect score ties, duplicate candidates and changed evaluation pools in recommendation and retrieval experiments. Trace metric differences with local HTML/JSON reports.**
-
-> This standalone repository contains RankProbe only. The verified alpha-4 downloads below remain at their original release location, with unchanged bytes and provenance.
 > 此独立仓库只包含 RankProbe。下方已验证的 alpha-4 下载保留在原发行地址，文件与来源记录不变；本次源码迁移不冒充新版本发行。
 
-**工程首版完整发行，进入维护阶段。** 当前版本仍是 `0.1.0a4` alpha。已交付范围、验证边界和维护规则见 [首版交付说明](docs/initial-delivery.md)；独立采用与实际收益继续作为后续验证事项。
+**首个 alpha 版本已发布，后续继续改进真实文件接入和报告阅读体验。** 当前版本仍是 `0.1.0a4` alpha。已交付范围、验证边界和维护规则见 [首版交付说明](docs/initial-delivery.md)；独立采用与实际收益继续作为后续验证事项。
 
 **[下载完整离线发行包](https://github.com/C4LLM3LUC4S/rechorus-patt-reproduction/releases/download/v0.1.0a4/RankProbe-0.1.0a4.zip)** · [发行说明与校验文件](https://github.com/C4LLM3LUC4S/rechorus-patt-reproduction/releases/tag/v0.1.0a4)。完整解压后打开 `START_HERE.md`，即可离线安装随包提供的 wheel；不需要 Git、API 密钥或现成实验。[公开源码](https://github.com/C4LLM3LUC4S/rankprobe)位于本仓库根目录；课程复现项目另行保留。
 
@@ -22,9 +19,9 @@ git clone --branch main https://github.com/C4LLM3LUC4S/rankprobe.git
 cd rankprobe
 ```
 
-**检查推荐与检索指标是否受到同分排序、重复候选和评测集合变化的影响。**
+## 什么时候用它
 
-RankProbe 在本地读取候选分数和可选的相关性标签，生成 HTML 和 JSON 报告，解释发现、影响范围与评测假设。无需重新训练模型、云账户或 API 密钥；核心只依赖 Python 标准库。
+如果两次推荐或检索实验的分数不同，RankProbe 可以帮你先检查：有没有漏掉查询、候选项目是否相同、同分和重复项目是否影响排序。它读取你导出的分数及可选标签，生成本地 HTML 报告，说明发现了什么、涉及哪些数据，以及下一步可以核对什么。JSON 文件保留详细结果，方便继续分析。无需重新训练模型、云账户或 API 密钥；核心只依赖 Python 标准库。
 
 [English](README.md) · [输入格式](docs/input-format.md) · [指标定义](docs/metrics.md) · [首次本地报告](docs/try-it.md) · [能力边界](docs/limitations.md)
 
@@ -68,7 +65,7 @@ python -m rankprobe compare --run baseline=examples/clean.csv --run changed=exam
 
 报告包括输入标识符与部分样例，分享前需自行检查是否包含私人信息。
 
-比较报告可先看 **Comparison results**：原始运行指标、匹配集合上的指标与右减左差值并排显示，每个值都附带覆盖范围和参考池。展开覆盖明细能看到排除了哪些查询，再按发现卡片中的建议检查原因。差值表示指定协议下的数值差异，不表示统计显著性。
+比较报告先看 **比较结果**。每张指标卡先显示同一批查询和候选上的分数，再给出‘后一次减前一次’的差值。分数旁会写明用了多少查询；各次运行自己的平均分和完整计算明细可以展开查看。接着看‘需要核对的地方’，按建议检查原始导出。数值差异只适用于标明的范围，也不能直接理解为统计显著。
 
 ## 解决什么问题
 
