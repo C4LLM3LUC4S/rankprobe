@@ -394,7 +394,7 @@ def _pairwise_results(report: Mapping[str, Any]) -> str:
             for side, metrics in (("left", sources[2]), ("right", sources[3]))
         )
         sections.append(
-            f'<article class="finding"><h3>{_esc(left)} → {_esc(right)}</h3>'
+            f'<article class="finding" id="pair-{index}"><h3>{_esc(left)} → {_esc(right)}</h3>'
             f'{_comparison_reader(pair, sources, report.get("protocol"))}'
             '<details><summary>Full metric table and coverage / <span lang="zh-CN">完整指标与范围</span></summary>'
             f'<p>File-level pair status: <strong>{_esc(pair.get("status"))}</strong>. '
@@ -414,7 +414,7 @@ def _compared_runs(value: Any) -> str:
     if not isinstance(value, Mapping):
         return _diagnostics(value)
     sections = []
-    for name, run in list(value.items())[:TABLE_LIMIT]:
+    for index, (name, run) in enumerate(list(value.items())[:TABLE_LIMIT]):
         if not isinstance(run, Mapping) or not isinstance(run.get("audit"), Mapping):
             sections.append(
                 f'<details><summary>{_esc(name)}: run diagnostics</summary>{_diagnostics(run)}</details>'
@@ -422,18 +422,106 @@ def _compared_runs(value: Any) -> str:
             continue
         audit = run.get("audit", {})
         summary = audit.get("summary", {}) if isinstance(audit, Mapping) else {}
+        focused_keys = {
+            "tie_analysis": "同分会影响多少 / Tie sensitivity",
+            "duplicates": "重复项会影响多少 / Duplicate sensitivity",
+            "negative_controls": "改变分数和顺序后的核查 / Negative controls",
+        }
+        focused = "".join(
+            f'<details id="run-{index}-{key}"><summary>{_esc(name)}：{label}</summary>'
+            f'{_diagnostics(audit[key])}</details>'
+            for key, label in focused_keys.items() if audit.get(key)
+        )
         remaining = {
             key: item for key, item in audit.items()
-            if key not in {"metrics", "summary", "findings", "protocol"}
+            if key not in {"metrics", "summary", "findings", "protocol", *focused_keys}
         } if isinstance(audit, Mapping) else {}
         sections.append(
-            f'<details><summary>{_esc(name)}: submitted-run diagnostics</summary>'
-            f'{_content(summary)}{_metrics(run.get("metrics", {}), f"runs[{json.dumps(str(name))}].metrics")}'
-            f'<details><summary>Sensitivity and remaining diagnostics</summary>{_diagnostics(remaining)}</details></details>'
+            f'<article class="finding" id="run-{index}"><h3>{_esc(name)}</h3>'
+            f'<details><summary>这份输入包含什么 / Run summary</summary>{_content(summary)}</details>'
+            f'<details id="run-{index}-metrics"><summary>{_esc(name)}：分数与查询范围 / Metrics and coverage</summary>'
+            f'{_metrics(run.get("metrics", {}), f"runs[{json.dumps(str(name))}].metrics")}</details>'
+            f'{focused}<details><summary>其他技术字段 / Remaining diagnostics</summary>'
+            f'{_diagnostics(remaining)}</details></article>'
         )
     if len(value) > TABLE_LIMIT:
         sections.append(f'<p class="muted">Showing {TABLE_LIMIT} of {len(value)} runs. Full stored results are in report.json.</p>')
     return "".join(sections)
+
+
+def _finding_target(report: Mapping[str, Any], finding: Mapping[str, Any]) -> tuple[str, str] | None:
+    """Only link to a diagnostic that this bounded report actually renders."""
+    code = finding.get("code")
+    evidence = finding.get("evidence", {})
+    evidence = evidence if isinstance(evidence, Mapping) else {}
+    runs, pairs = report.get("runs"), report.get("pairs")
+    if isinstance(runs, Mapping) and runs:
+        name = finding.get("run_name", evidence.get("run_name"))
+        for index, (run_name, run) in enumerate(list(runs.items())[:TABLE_LIMIT]):
+            if name != run_name or not isinstance(run, Mapping) or not isinstance(run.get("audit"), Mapping):
+                continue
+            key, label = (
+                ("tie_analysis", "同分影响") if code == "score_ties"
+                else ("negative_controls", "固定分数与顺序核查") if code == "constant_scores"
+                else ("duplicates", "重复项影响") if code == "duplicate_candidates"
+                else ("metrics", "分数与查询范围")
+            )
+            if key == "metrics" or run["audit"].get(key):
+                return f"run-{index}-{key}", f"看 {run_name} 的{label}"
+            return f"run-{index}", f"查看 {run_name} 的运行记录"
+        if isinstance(pairs, list) and "left" in evidence and "right" in evidence:
+            for index, pair in enumerate(pairs[:TABLE_LIMIT]):
+                if isinstance(pair, Mapping) and all(pair.get(k) == evidence[k] for k in ("left", "right")):
+                    return f"pair-{index}", "查看这两份结果的比较"
+    keys = (
+        ("tie_analysis", "查看同分影响") if code == "score_ties"
+        else ("negative_controls", "查看固定分数与顺序核查") if code == "constant_scores"
+        else ("duplicates", "查看重复项影响") if code == "duplicate_candidates"
+        else ("metrics", "查看分数与查询范围")
+    )
+    for key, label in (keys, ("pairs", "查看比较结果"), ("runs", "查看报告中的运行")):
+        if report.get(key):
+            return key, label
+    return None
+
+
+def _score_export_recheck() -> str:
+    return (
+        '<section id="score-export-recheck"><h2>有同分，需要改吗？ / Recheck a score export</h2>'
+        '<p lang="zh-CN">先确认同分来自哪里，再决定要不要改文件。不要只为了让警告消失而改分数。</p>'
+        '<ul lang="zh-CN">'
+        '<li><strong>原始分数本来就相同：</strong>可以保留，说明采用的同分规则，并查看同分换序能影响哪些指标。</li>'
+        '<li><strong>导出时丢了精度，原始分数还在：</strong>从同一次运行保留的分数重新导出，另存文件和报告。'
+        '先确认查询、候选、标签和评测设置都没变，再核对分数、同分情况和指标差异。</li>'
+        '<li><strong>没有保留原始分数：</strong>先记录无法恢复的限制。不要凭名次、标签或已舍入的值拼出新分数。</li>'
+        '</ul><p lang="zh-CN">复核看的是导出是否忠实于原记录，不是警告全部消失。'
+        '恢复正确后，原始分数仍可能有同分；指标相同也不能单独证明文件恢复正确。</p>'
+        '<details><summary>English guidance</summary><p>Retain genuine ties and declare the tie policy. '
+        'If export rounding discarded precision, re-export retained scores from the same run into new files. '
+        'Check query/candidate identities, judgments, protocol and score fidelity before metrics. '
+        'Without retained evidence, record the limit; ranks or labels cannot reconstruct original scores. '
+        'A zero metric delta or an empty warning list alone does not validate recovery.</p></details></section>'
+    )
+
+
+def _finding_evidence(code: str, evidence: Any) -> str:
+    if code == "score_ties" and isinstance(evidence, Mapping):
+        examples = evidence.get("examples")
+        if isinstance(examples, list) and all(isinstance(row, Mapping) for row in examples):
+            rows = []
+            for example in examples[:EVIDENCE_LIMIT]:
+                row = dict(example)
+                if isinstance(row.get("item_ids"), (list, tuple)):
+                    row["item_ids"] = row["item_ids"][:EVIDENCE_LIMIT]
+                rows.append(row)
+            counts = {key: value for key, value in evidence.items() if key != "examples"}
+            return (
+                _diagnostics(counts, EVIDENCE_LIMIT)
+                + '<p lang="zh-CN">下面是检查程序保留的同分样例，不是全部同分组；'
+                '每组候选标识也可能只保留或展示了一部分。完整 JSON 保存的是程序实际记录的证据。</p>'
+                + _table(rows, EVIDENCE_LIMIT)
+            )
+    return _diagnostics(evidence, EVIDENCE_LIMIT)
 
 
 def _diagnostics(value: Any, limit: int = TABLE_LIMIT) -> str:
@@ -576,8 +664,10 @@ def render_html(report: Mapping[str, Any]) -> str:
         badge = f'<span class="badge {severity}">{severity_label}</span>'
         state = f'<span class="status">{_esc(status)}</span>' if status is not None else ""
         evidence = finding.get("evidence", finding.get("examples"))
+        location = f'<p class="code">JSON: findings[{index}].evidence</p>'
         details = (
-            f"<details><summary>Inspect evidence</summary>{_diagnostics(evidence, EVIDENCE_LIMIT)}</details>"
+            f'<details id="finding-{index}-evidence"><summary>查看这项发现的证据 / Inspect evidence</summary>'
+            f'{location}{_finding_evidence(str(code), evidence)}</details>'
             if evidence is not None
             else ""
         )
@@ -589,42 +679,38 @@ def render_html(report: Mapping[str, Any]) -> str:
             if finding.get("run_name") is not None else ""
         )
         next_step = FINDING_NEXT_STEPS.get(str(code))
-        targets = (
-            ("pairs", "Comparison results"),
-            ("runs", "Run diagnostics"),
-        ) if report.get("pairs") else (
-            ("tie_analysis", "Tie sensitivity") if str(code) in {"score_ties", "constant_scores"}
-            else ("duplicates", "Duplicate sensitivity") if str(code) == "duplicate_candidates"
-            else ("metrics", "Metric coverage"),
-        )
-        related = next(
-            ((key, label) for key, label in targets if report.get(key)), None
-        )
+        related = _finding_target(report, finding)
         related_link = (
-            f' <a href="#{related[0]}">{related[1]}</a>.' if related and next_step else ""
+            f' <a href="#{related[0]}">{_esc(related[1])}</a>.' if related and next_step else ""
         )
         action = (
             f'<p><strong>Next step:</strong> {_esc(next_step)}{related_link}</p>' if next_step else ""
         )
-        location = f'<p class="code">JSON: findings[{index}].evidence</p>'
         reader_copy = FINDING_COPY_ZH.get(str(code))
+        recheck = (
+            '<p lang="zh-CN"><a href="#score-export-recheck">需不需要改分数？改完怎样复核？</a></p>'
+            if str(code) in {"score_ties", "constant_scores"} else ""
+        )
         if reader_copy:
             heading, explanation, next_action = reader_copy
-            link = f' <a href="#{related[0]}">查看对应结果</a>。' if related else ""
+            link = f' <a href="#{related[0]}">{_esc(related[1])}</a>。' if related else ""
             cards.append(
-                f'<article class="finding {severity}">{badge}<h3 lang="zh-CN">{_esc(heading)}</h3>{run_context}'
+                f'<article class="finding {severity}" id="finding-{index}">{badge}<h3 lang="zh-CN">{_esc(heading)}</h3>{run_context}'
                 f'<p lang="zh-CN">{_esc(explanation)}</p><p lang="zh-CN"><strong>下一步：</strong>{_esc(next_action)}{link}</p>'
+                f'{recheck}{details}'
                 f'<details><summary>English description / 技术详情与证据</summary>{state}<h4>{_esc(title)}</h4><p>{_esc(message)}</p>'
-                f'<p class="code">{_esc(code)}</p>{scope}{action}{location}{details}</details></article>'
+                f'<p class="code">{_esc(code)}</p>{scope}{action}</details></article>'
             )
         else:
             cards.append(
-                f'<article class="finding {severity}">{badge}{state}<h3>{_esc(title)}</h3>{run_context}<p>{_esc(message)}</p><p class="code">{_esc(code)}</p>{scope}{action}{location}{details}</article>'
+                f'<article class="finding {severity}" id="finding-{index}">{badge}{state}<h3>{_esc(title)}</h3>{run_context}<p>{_esc(message)}</p><p class="code">{_esc(code)}</p>{scope}{action}{details}</article>'
             )
     findings_html = (
         "".join(cards)
         or '<div class="empty"><h3>这次检查没有列出问题 / No findings were reported.</h3><p lang="zh-CN">你可以保留报告和评测设置，用于下次比较。这只说明当前检查没有发现问题；标签是否正确、数据是否有泄漏，仍需要其他证据。</p><p>This means the configured checks found no issues in the supplied data. It does not establish data provenance, relevance quality, or absence of leakage.</p></div>'
     )
+    if any(f.get("code") in {"score_ties", "constant_scores"} for f in findings):
+        sections.append(_score_export_recheck())
     sections.insert(
         0,
         f'<section id="findings"><h2>需要核对的地方 / Findings <span class="count">{len(findings)}</span></h2><p class="muted" lang="zh-CN">先读每项发现和建议的下一步，再按需展开证据。警告提醒你核对一种情况，并不等于评测一定有错。</p>{findings_html}</section>',
