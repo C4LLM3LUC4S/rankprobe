@@ -52,7 +52,7 @@ def main():
         print("Local files / 本地文件：仅生成本地报告；缺失标签保持未知，分享前检查报告中的标识符。")
     for option, value in (("--qrels", args.qrels), ("--cutoffs", args.cutoffs),
                           ("--input-format", args.input_format), ("--qrels-format", args.qrels_format)):
-        if value is not None:
+        if value is not None and value != "auto":
             command.extend([option, str(value)])
     command.extend(["--out", str(output)])
     try:

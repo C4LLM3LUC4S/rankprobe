@@ -21,6 +21,16 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def test_default_demo_remains_available_without_own_file_options(tmp_path):
+    output = tmp_path / "original demo path"
+    process = invoke(tmp_path, "--out", output)
+    assert process.returncode == 0, process.stderr
+    report = json.loads((output / "report.json").read_text(encoding="utf-8"))
+    assert report["provenance"]["command"] == "demo"
+    assert "demo_note" in report
+    assert "Synthetic example" in process.stdout
+
+
 def test_own_score_file_from_unrelated_directory_preserves_unknowns_and_inputs(tmp_path):
     source = tmp_path / "own scores.csv"
     source.write_text("query_id,item_id,score\nq1,a,0.9\nq1,b,0.8\n", encoding="utf-8")
