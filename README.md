@@ -27,6 +27,8 @@ Have saved MTEB retrieval predictions? The [score-file recipe](docs/mteb-workflo
 
 ## Quick start
 
+For an immediate source preview, download and fully extract this repository, then run `python quickstart.py`. It opens a built-in synthetic report without installation or network access and preserves earlier reports. See [START_HERE](START_HERE.md). The regular installed-package path follows below.
+
 Requires Python 3.10 or newer. The complete [GitHub release bundle](https://github.com/C4LLM3LUC4S/rechorus-patt-reproduction/releases/tag/v0.1.0a4) includes offline instructions, packages, source and original fixtures. The commands below use a source checkout; PyPI is not part of this release.
 
 On Windows, choose a short extraction path. If creating the environment fails with a long-path hint from pip/ensurepip, start again from a shorter folder.

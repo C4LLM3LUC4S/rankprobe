@@ -1,5 +1,12 @@
 # Changelog
 
+## Source-preview convenience — 2026-10-22
+
+- Add `quickstart.py` and bilingual `START_HERE.md` for a no-install source preview with unique report folders and optional browser opening.
+- Exercise the preview before installing development dependencies in the existing cross-platform matrix. Include the launcher in future source packages; leave published alpha-4 archives unchanged.
+- Core evaluation/report semantics and the package version are unchanged. This is source maintenance, not a new binary release.
+- The optional fixed MovieLens downloader now makes at most three attempts for transient connection/status failures, preserves strict hashes, and gives an existing-archive recovery command. Certificate and permanent HTTP errors are never worked around; existing files remain untouched.
+
 ## Standalone source repository — 2026-10-22
 
 - Move the public RankProbe package to its own repository with root-level installation, bilingual entry points and canonical source/issue metadata.
