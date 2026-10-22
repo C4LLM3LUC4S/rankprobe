@@ -1,5 +1,7 @@
 # RankProbe · 排名评测核查
 
+第一次想直接看看：完整解压本仓库，运行 `python quickstart.py`。不安装依赖、不联网下载，自动生成并打开合成示例报告，旧报告保留。详见 [开始使用](START_HERE.md)；这是源码预览，正式安装路径仍见下文。
+
 **检查推荐与检索评测中的同分、重复候选和集合变化，用本地报告复核指标差异。**
 
 **Inspect score ties, duplicate candidates and changed evaluation pools in recommendation and retrieval experiments. Trace metric differences with local HTML/JSON reports.**

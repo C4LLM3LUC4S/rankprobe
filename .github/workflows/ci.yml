@@ -40,6 +40,10 @@ jobs:
           done
           echo "RankProbe package was not found"
           exit 1
+      - name: Preview source before installing development dependencies
+        # Source preview precedes installation and does not alter the environment.
+        run: python quickstart.py --no-open --out "${{ runner.temp }}/rankprobe-source-preview"
+        working-directory: ${{ steps.package.outputs.root }}
       - name: Install development dependencies
         working-directory: ${{ steps.package.outputs.root }}
         run: python -m pip install -e ".[dev,adapters]"

@@ -34,7 +34,7 @@ def check(dist: Path, source: Path) -> None:
         payload = handle.read()
     with tarfile.open(fileobj=io.BytesIO(payload), mode="r:") as package:
         names = set(package.getnames())
-        expected = {"pyproject.toml", "README.md", "README.zh-CN.md", "MANIFEST.in"}
+        expected = {"pyproject.toml", "README.md", "README.zh-CN.md", "MANIFEST.in", "quickstart.py", "START_HERE.md"}
         for directory in ("examples", "docs", "scripts", "tests", "src/rankprobe"):
             expected.update(
                 path.relative_to(source).as_posix()

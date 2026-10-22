@@ -17,7 +17,7 @@ REPOSITORY = "C4LLM3LUC4S/rankprobe"
 ALLOWED_ROOT_FILES = {
     ".gitattributes", ".gitignore", "CHANGELOG.md", "CITATION.cff",
     "CONTRIBUTING.md", "LICENSE", "MANIFEST.in", "README.md",
-    "README.zh-CN.md", "pyproject.toml",
+    "README.zh-CN.md", "pyproject.toml", "START_HERE.md", "quickstart.py",
 }
 ALLOWED_DIRECTORIES = {".github", "docs", "examples", "scripts", "src", "tests"}
 ALLOWED_SUFFIXES = {".md", ".py", ".txt", ".csv", ".jsonl", ".run", ".trec", ".qrels", ".tsv", ".yml"}
