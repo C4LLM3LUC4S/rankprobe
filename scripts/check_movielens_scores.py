@@ -15,10 +15,14 @@ import json
 import math
 from pathlib import Path
 import platform
+from http.client import IncompleteRead
+import socket
+import ssl
 import subprocess
 import sys
 import time
 from urllib.request import urlopen
+from urllib.error import HTTPError, URLError
 from zipfile import BadZipFile, ZipFile
 import zlib
 
@@ -71,8 +75,24 @@ def fetch_archive(path):
     path = Path(path)
     require(not path.exists() and not path.is_symlink(), "fetch: choose a new archive path")
     require(path.parent.is_dir(), "fetch: parent directory must already exist")
-    with urlopen(URL, timeout=60) as response:
-        content = response.read(ARCHIVE_BYTES + 1)
+    for attempt in range(3):
+        try:
+            with urlopen(URL, timeout=60) as response:
+                content = response.read(ARCHIVE_BYTES + 1)
+            break
+        except HTTPError as exc:
+            if exc.code not in {408, 429, 500, 502, 503, 504}:
+                raise GateError(f"fetch: HTTP {exc.code}; obtain the fixed official ZIP and use --archive") from exc
+        except URLError as exc:
+            if isinstance(exc.reason, (ssl.SSLCertVerificationError, ssl.CertificateError)):
+                raise GateError("fetch: certificate verification failed; repair the trusted connection or use --archive; verification is never disabled") from exc
+            if not isinstance(exc.reason, (TimeoutError, ConnectionError, socket.gaierror)):
+                raise GateError("fetch: connection unavailable; obtain the fixed official ZIP and use --archive") from exc
+        except (TimeoutError, ConnectionError, IncompleteRead):
+            pass
+        if attempt == 2:
+            raise GateError("fetch: connection failed after 3 attempts; obtain the fixed official ZIP and use --archive")
+        time.sleep(2 ** attempt)
     require(len(content) == ARCHIVE_BYTES
             and hashlib.sha256(content).hexdigest() == ARCHIVE_SHA256,
             "fetch: fixed source byte length or SHA256 differs")

@@ -4,6 +4,8 @@ This case fits two small models on **actual public MovieLens ratings**, scores t
 
 ## Source and scope
 
+Download recovery: `--fetch` makes at most three attempts for transient connection failures or retryable HTTP statuses, then stops with an offline recovery hint. It never disables certificate checks or relaxes the declared length/SHA256. If the network remains unavailable, obtain the fixed official ZIP through a working trusted connection and use `--archive path/to/ml-100k.zip` with a new output directory. Existing archive files are not overwritten; wrong hashes fail immediately. A download failure is not a completed evaluation.
+
 Use the official [MovieLens 100K dataset](https://grouplens.org/datasets/movielens/100k/) and its [usage README](https://files.grouplens.org/datasets/movielens/ml-100k-README.txt). The README permits research use, requires acknowledgment, and requires separate permission for redistribution or commercial/revenue-bearing use. This repository distributes original code and aggregate observations; it does not bundle ratings, model captures, prediction rows, qrels or generated reports. Do not redistribute those local outputs or use the data commercially without the required permission. GroupLens does not endorse RankProbe.
 
 The fixed ZIP has 4,924,029 bytes and SHA256 `50d2a982c66986937beb9ffb3aa76efe955bf3d5c6b761f4e3a7cd717c6a3229`. Its official MD5 record was also checked: `0e33842e24a9c977be4e0107933c0723`. The checker verifies the ZIP and the selected `README`, `u1.base` and `u1.test` member SHA256 values before fitting. It reads no demographic files and extracts no archive paths.
