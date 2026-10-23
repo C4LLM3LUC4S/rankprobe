@@ -1,5 +1,17 @@
 # From a report finding to a checked action
 
+## 报告里该怎么看、接下来怎么做？
+
+先在“需要核对的地方”确认是哪次运行，再展开卡片里的“查看这项发现的证据”。同分样例会直接列出查询、分数和候选标识，不用先翻英文技术详情。网页中的小数会缩短显示；核对原始精度用 JSON 或原始分数文件，别从网页抄回去作为恢复后的输入。
+
+卡片下方的链接会带到对应运行的同分影响、重复项影响或分数范围。三份以上结果一起比较时，集合差异的链接会指向涉及的那一对结果。只有实际展示的结果才有链接；完整的原始字段仍保留在 JSON 里。
+
+看到同分别急着改。原始分数确实相同，可以保留并说明同分规则；如果是导出时丢了精度，再从同一次运行保留的分数另存新文件，按原标签和设置复核。没有原始分数就说明无法恢复，别凭名次或标签凑分数。复核看的是导出是否忠实于原记录，既不要求警告归零，也不能只凭指标相同就认定恢复正确。报告内的“有同分，需要改吗？”保留了这些选择，离线打开也能看。
+
+The finding card exposes stored evidence separately from technical prose. Its links lead to the affected run's sensitivity/coverage, or the specific pair in a multi-run comparison. Follow the in-report score-export checklist before changing an input. Genuine ties can remain after a faithful recovery; unchanged metrics alone do not verify score fidelity.
+
+## Executed cases and their evidence
+
 Use this page to decide what a finding lets you change and what to check afterward. It connects existing walkthroughs to execution evidence; each case retains its own declared protocol and scope. Evidence reviewed through 2026-10-21 for `0.1.0a4`.
 
 | Case | Input evidence | Action and recheck status |
