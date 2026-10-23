@@ -32,6 +32,7 @@ python quickstart.py --run "before=my exports/before.run" --run "after=my export
 ## 遇到问题时
 
 - 找不到文件：检查终端所在目录和文件路径，带空格的路径要加引号。
+- 提示 `cannot read input as UTF-8`：文件没能按 UTF-8 读出来。回到生成它的程序，另存一份 UTF-8 文件，再用新路径重试；原文件先留着。不要选择“忽略”或“替换”错误字符，编号、分数、标签、缺失值和行顺序都要保持原样。具体检查方法见[文件编码说明](docs/input-format.md#text-encoding-errors)。
 - 输出目录已存在：用 `--out` 指定新目录，保留原报告。
 - 显示 `Not available` 或“无法计算”：查看标签和查询范围，不能把它当作零分。
 - 命令返回退出码 `1`：报告已生成，但有需要优先处理的问题，打开打印的 HTML 路径查看。
@@ -46,3 +47,5 @@ With Python 3.10+, extract the complete source ZIP and run `python quickstart.py
 Verified alpha-4 offline packages remain at their [original release location](https://github.com/C4LLM3LUC4S/rechorus-patt-reproduction/releases/tag/v0.1.0a4). Those archives are immutable and predate this source convenience launcher.
 
 Use `python quickstart.py --input predictions.csv` for your own file, or repeat `--run NAME=FILE` at least twice to compare. Optional `--qrels`, `--cutoffs` and explicit format flags use the existing parser. Unknown labels remain unknown. Exit 1 still produces a report; exit 2 is a failed operation. See [product tasks and acceptance](docs/product-scope.md).
+
+If a file cannot be read as UTF-8, re-export a new UTF-8 copy from its original source and keep the original. Do not skip or replace undecodable bytes. Check identifiers, numeric values, labels, unknowns and row order before retrying; see [encoding recovery](docs/input-format.md#text-encoding-errors).
