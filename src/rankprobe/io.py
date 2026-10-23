@@ -13,6 +13,18 @@ class InputError(ValueError):
     """An input file does not satisfy the published data contract."""
 
 
+def _encoding_error(path: Path, exc: UnicodeDecodeError) -> InputError:
+    return InputError(
+        f"{path}: cannot read input as UTF-8. "
+        "Export a new UTF-8 copy (BOM allowed) from the original source, then retry. "
+        "Keep the original, identifiers, scores, labels, unknowns and row order unchanged; "
+        "do not ignore or replace undecodable bytes.\n"
+        "文件无法按 UTF-8 读取。请从原始来源另存一份 UTF-8 文件后重试，保留原文件。"
+        "别跳过或替换无法读取的字符；编号、分数、标签、缺失值和行顺序都要保持原样。\n"
+        f"Decoder detail: {exc}"
+    )
+
+
 def _unique_keys(pairs: list[tuple[str, object]]) -> dict:
     result = {}
     for key, value in pairs:
@@ -125,6 +137,8 @@ def _records(path: Path, required: set[str], format: str) -> Iterator[tuple[int,
                 "keep the original unchanged."
             )
         raise InputError(message) from exc
+    except UnicodeDecodeError as exc:
+        raise _encoding_error(path, exc) from exc
     except (OSError, UnicodeError) as exc:
         raise InputError(f"{path}: cannot read input: {exc}") from exc
 
@@ -144,6 +158,8 @@ def _trec_records(path: Path, columns: int) -> Iterator[tuple[int, list[str]]]:
                         f"{path}:{line_number}: expected exactly {columns} whitespace-separated TREC fields"
                     )
                 yield line_number, fields
+    except UnicodeDecodeError as exc:
+        raise _encoding_error(path, exc) from exc
     except (OSError, UnicodeError) as exc:
         raise InputError(f"{path}: cannot read input: {exc}") from exc
 

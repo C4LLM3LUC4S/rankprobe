@@ -4,6 +4,14 @@ RankProbe reads UTF-8 CSV, JSONL, and TREC-style run/qrels text, including a UTF
 
 With the default `auto` format, `.csv` and `.jsonl` select those loaders; `.run` / `.trec` select TREC predictions and `.qrels` selects TREC judgments. Other extensions require an explicit `--input-format` or `--qrels-format` (`csv`, `jsonl`, or `trec`). File contents are not guessed. In `compare`, `auto` detects each run separately; an explicit input format applies to every run.
 
+### Text encoding errors
+
+If RankProbe says `cannot read input as UTF-8`, it could not decode the file using the required encoding. The decoder detail stays in the message. This does not identify the actual encoding or tell whether the file is damaged; RankProbe does not guess an encoding, skip rows or replace invalid bytes. The CLI exits 2 and does not create a report.
+
+Go back to the program or dataset that produced the file and export a **new UTF-8 copy**; a UTF-8 BOM is accepted. Keep the original. Before retrying with the new path, compare query/item identifiers (including leading zeroes and non-ASCII characters), exact score and judgment values, row count and order, and which prediction labels are missing. Blank/null prediction labels must stay unknown, and TREC `-1` judgments must remain `-1`. Changing the encoding must not change the evaluation data. If the source already lost characters or numeric precision, ask its producer for a fresh export; ignoring/replacing decoding errors cannot restore that information.
+
+The same recovery route applies to predictions and independent qrels in CSV, JSONL or TREC. Keep the file's existing format and column contract. Renaming a file, changing the format flag or choosing a missing-label policy does not change its encoding. The recovery preserves data only when the new source export actually matches; a successfully generated report alone does not prove this.
+
 ### CSV parser locations
 
 CSV parsing failures report the source, the parser's reason and the physical line at which parsing stopped. This counts lines consumed from the text input, not completed records: a quoted field may span several lines. See [Python's reader line-number definition](https://docs.python.org/3/library/csv.html#csv.csvreader.line_num). The stop position does not identify where the malformed record began; an unterminated quote can consume the rest of the file before the parser reports the error.
