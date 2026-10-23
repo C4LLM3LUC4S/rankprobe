@@ -30,6 +30,22 @@ FINDING_NEXT_STEPS = {
     "empty_run": "Check the export path and filters, then supply prediction rows before interpreting ranking metrics.",
 }
 
+FINDING_COPY_ZH = {
+    "query_coverage_mismatch": ("两份结果包含的查询不同", "平均分可能因为少算了某些查询而变化，并不一定是排序变好了。", "先核对缺少的查询。如果确实漏导出，从原始预测中恢复后再比较；如果范围本来就不同，请说明原因。"),
+    "candidate_set_mismatch": ("同一查询的候选项不同", "分数差异可能来自候选项变化，也可能来自排序变化。", "先确认要比较同一批候选的排序，还是两个完整检索系统。前者需要同一阶段的原始分数；后者需要另行明确检索评测规则，不要删掉不同项来强行对齐。"),
+    "cross_run_label_mismatch": ("两份结果使用的标签不一致", "相同查询和候选的标签不同，或一边有标签、另一边没有。", "回到标签来源核对。用一致的标签重新评测之前，不把差异归因于模型。"),
+    "unknown_judgments": ("有些候选还不知道是否相关", "缺少相关性标签时，部分查询或指标可能无法计算；这不表示它们得了零分。", "展开指标明细，查看哪些查询没参与计算。能找到原有标签时再补充，不要为了显示分数把未知标签填成零。"),
+    "explicit_unjudged_qrels": ("标签文件里有“还没判断”的标记", "这个来源没有给出相关性判断。如果预测文件里已有标签，会保留已有标签；其余项目按你选定的未知标签规则处理。", "先核对原始标签的约定。这类标记不能支持“标签完整”的声明，也不要为了算出分数把未知填成零。"),
+    "qrels_queries_without_predictions": ("有标签的查询没有出现在预测结果中", "报告只能分析已经提交的预测，不能替缺失查询生成分数。", "确认这些查询是否本应参与评测。若是漏导出，请从原始结果恢复；否则说明本次只评测了哪些查询。"),
+    "missing_qrels_queries": ("部分查询找不到对应的标签", "查询标识可能没有对上，也可能缺少标签资料。", "先核对查询标识和标签文件。资料不完整时，重新考虑是否有依据声明标签完整。"),
+    "duplicate_candidates": ("同一查询中有候选重复出现", "重复项可能影响排序位置和分数。是否需要修正，要看它们为何重复。", "检查导出或采样步骤，再看去重前后的指标差异。如果重复是有意保留的，记录原因和处理规则。"),
+    "score_ties": ("有候选的分数完全相同", "同分候选换一种顺序，指标可能就会变化。", "查看同分换序能带来多大差异，再检查分数精度。比较多个运行时，使用同一种同分处理规则。"),
+    "constant_scores": ("有些查询里的候选分数全都一样", "对这些查询来说，排序完全取决于同分处理方式。即使算出了非零分数，也不能说明候选分数区分出了相关项目。", "先确认导出的是你想检查的模型分数，再看看报告里的固定分数对照。"),
+    "limited_reference_pool": ("分数只反映当前提供的候选和标签", "NDCG 使用的比较范围有限，不能直接当成整个检索库的表现。", "报告分数时说明计算范围。Recall 需要有依据的完整相关项信息，打开一个开关不能让标签变完整。"),
+    "unjudged_assumed_nonrelevant": ("这次把未标注项目按不相关处理", "这是评测时采用的假设，并没有增加任何真实标签。", "记录采用这个假设的依据，并保留一份未知标签不填零的结果作为对照。"),
+    "empty_run": ("没有读到候选分数", "当前没有可用于排序评测的记录。", "检查导出路径和筛选条件，确认文件里有预期的查询、候选及原始分数后再运行。"),
+}
+
 
 def _float_text(value: float, *, signed: bool = False) -> str:
     compact = format(value, "+.6g" if signed else ".6g")
@@ -124,7 +140,7 @@ def _metrics(value: Any, json_path: str | None = None) -> str:
                 records.append({"metric": name, **visible})
             else:
                 records.append({"metric": name, "value": metric})
-        note = '<p class="muted">Status <strong>partial</strong> means limited coverage or a candidate-pool reference; <strong>not_checked</strong> means the data or protocol does not support this metric. A missing value is not zero.</p>'
+        note = '<p class="muted" lang="zh-CN">表里的 Value 是分数，Evaluated queries / Total queries 表示用了多少查询。partial 表示计算范围有限；not_checked 表示这次没有条件计算。Min 和 Max 是同分候选换序时可能得到的范围，不是置信区间。</p><details><summary>English field guide</summary><p class="muted">Status <strong>partial</strong> means limited coverage or a candidate-pool reference; <strong>not_checked</strong> means the data or protocol does not support this metric. A missing value is not zero.</p></details>'
         details = []
         for name, metric in list(value.items())[:TABLE_LIMIT]:
             if not isinstance(metric, Mapping):
@@ -178,11 +194,13 @@ def _partial_perfect_context(value: Any) -> str:
         ):
             query_word = "query" if evaluated == 1 else "queries"
             notes.append(
-                f'<p class="muted">{_esc(name)} = 1 is the average over '
+                f'<p lang="zh-CN">这里的 {_esc(name)} = 1 只来自 {_esc(evaluated)} / {_esc(total)} 个查询。'
+                '其余查询没有参与这个平均分，所以不能理解为所有查询都排得很好。下方明细会列出未能算分的原因。</p>'
+                f'<details><summary>English explanation</summary><p class="muted">{_esc(name)} = 1 is the average over '
                 f'{_esc(evaluated)} eligible {query_word} out of {_esc(total)} submitted queries. '
                 'Excluded queries are not included in this average, so the value does not establish '
                 'perfect results across all submitted queries. See coverage details for exclusion '
-                'reasons.</p>'
+                'reasons.</p></details>'
             )
     return "".join(notes)
 
@@ -219,11 +237,11 @@ def _comparison_reader(
     candidates = pair.get("candidate_sets", {})
     candidates = candidates if isinstance(candidates, Mapping) else {}
     counts = (
-        f'<p><strong>Submitted queries / <span lang="zh-CN">已提交查询</span>:</strong> '
-        f'{_esc(left)}: {_esc(coverage.get("left_queries"))} · '
-        f'{_esc(right)}: {_esc(coverage.get("right_queries"))}. '
-        f'Common queries with the same candidate pools: {_esc(matched.get("query_count"))} '
-        '(<span lang="zh-CN">候选项相同的共同查询</span>).</p>'
+        f'<p lang="zh-CN"><strong>先看比较用了哪些查询：</strong>'
+        f'{_esc(left)} 提交了 {_esc(coverage.get("left_queries"))} 个，'
+        f'{_esc(right)} 提交了 {_esc(coverage.get("right_queries"))} 个。'
+        f'其中 {_esc(matched.get("query_count"))} 个查询在两边都出现，而且候选项相同。'
+        '每个指标还可能因为标签不足等原因少算一些查询，具体数量标在分数旁。</p>'
     )
     different_queries = any(
         isinstance(coverage.get(key), int) and coverage[key] > 0
@@ -231,18 +249,18 @@ def _comparison_reader(
     )
     if different_queries:
         action = (
-            'Check the missing query IDs. Restore omitted predictions if accidental, then rerun. '
-            '<span lang="zh-CN">两份结果覆盖的查询不同。核对缺少的查询；若为漏导出，恢复后重新比较。</span>'
+            '两份结果包含的查询不同。先找到缺少的是哪些查询；如果是漏导出，从原始结果恢复后再比较。'
+            '如果本来就只想评测其中一部分，请说明这个范围。'
         )
     elif isinstance(candidates.get("differing_queries"), int) and candidates["differing_queries"] > 0:
         action = (
-            'Check the actual candidate stage before interpreting a matched change. '
-            '<span lang="zh-CN">候选项不同；先核对实际候选来源，不要裁剪或补造分数来强行对齐。</span>'
+            '同一个查询的候选项不同。先确认你要比较的是“同一批候选怎样排序”，还是两个完整检索系统。'
+            '不要删掉不同的候选、编造分数或补标签来凑成相同集合。'
         )
     else:
         action = (
-            'Read the matched values with their metric-eligible counts and reference scope. '
-            '<span lang="zh-CN">结合可算查询数及参考范围阅读对齐后结果；无法计算，不是零分。</span>'
+            '比较同一张卡片里的两个结果，同时核对分数旁的查询数量和计算范围。'
+            '如果某个值无法计算，先展开下方明细查看原因，不要把它当作零分。'
         )
 
     def compact(metric: Any, *, delta: bool = False) -> str:
@@ -255,15 +273,16 @@ def _comparison_reader(
             text = f"{value:+}"
         else:
             text = _text(value)
+        if value is None:
+            text = "无法计算 / Not available"
         count = ""
         if "evaluated_queries" in metric:
             total = f' / {_esc(metric["total_queries"])}' if "total_queries" in metric else ""
             count = (
-                f' <small>(eligible queries: {_esc(metric["evaluated_queries"])}{total}; '
-                '<span lang="zh-CN">可算查询</span>)</small>'
+                f' <small>（用了 {_esc(metric["evaluated_queries"])}{total} 个查询）</small>'
             )
         scope = (
-            ' <small>· limited scope / <span lang="zh-CN">范围有限</span></small>'
+            ' <small>· 仅限当前范围</small>'
             if metric.get("status") == "partial" else ""
         )
         return f'<strong>{_esc(text)}</strong>{count}{scope}'
@@ -282,11 +301,11 @@ def _comparison_reader(
                 value = source.get(name, {})
                 references.append(value.get("reference") if isinstance(value, Mapping) else None)
             reference_labels = {
-                "submitted_candidates": "submitted candidates / 已提交候选项",
-                "candidate_pool": "supplied candidate pool / 当前候选池",
-                "known_qrels_pool": "supplied judgments / 已提供的判断集合",
-                "complete_qrels": "declared complete judgments / 已声明完整的判断集合",
-                "unavailable": "unavailable / 无可用范围",
+                "submitted_candidates": "本次提交的候选项（submitted candidates）",
+                "candidate_pool": "本次提交的候选项（candidate pool）",
+                "known_qrels_pool": "已有标签对应的项目（supplied judgments）",
+                "complete_qrels": "使用者声明完整的标签集合（declared complete judgments）",
+                "unavailable": "暂无可用的计算范围",
             }
             reference_text = [
                 reference_labels.get(value, value) if isinstance(value, str) else value
@@ -298,38 +317,37 @@ def _comparison_reader(
             )
             previews.append(
                 f'<div class="metric-preview"><h4>{_esc(name)}</h4><dl>'
-                '<dt>Submitted averages / <span lang="zh-CN">各自平均</span></dt>'
-                f'<dd>{_esc(left)}: {compact(sources[0].get(name))}<br>'
-                f'{_esc(right)}: {compact(sources[1].get(name))}</dd>'
-                '<dt>Matched averages / <span lang="zh-CN">对齐后平均</span></dt>'
+                '<dt>同一批查询和候选上的平均分</dt>'
                 f'<dd>{_esc(left)}: {compact(sources[2].get(name))}<br>'
                 f'{_esc(right)}: {compact(sources[3].get(name))}</dd>'
-                f'<dt>Difference / <span lang="zh-CN">差值</span> ({_esc(right)} − {_esc(left)})</dt>'
+                f'<dt>分数差（{_esc(right)} − {_esc(left)}）</dt>'
                 f'<dd>{compact(sources[4].get(name), delta=True)}</dd></dl>'
-                f'<p class="muted">Matched reference / <span lang="zh-CN">对齐比较参考范围</span>: {reference}.</p></div>'
+                f'<p class="muted">计算范围：{reference}。</p>'
+                '<details><summary>查看两次运行各自的平均分</summary><p>这里各自使用能够算分的查询，两边的查询可能不同，不能只看谁的平均分更高。</p><dl>'
+                '<dt>各自平均 / Per-run averages</dt>'
+                f'<dd>{_esc(left)}: {compact(sources[0].get(name))}<br>'
+                f'{_esc(right)}: {compact(sources[1].get(name))}</dd></dl></details></div>'
             )
     preview = ""
     if previews:
         preview = (
-            f'<p>Quick view at the largest requested cutoff, k={_esc(k)} '
-            f'(<span lang="zh-CN">最大请求截断位置：只看前{_esc(k)}个结果</span>). '
-            'All requested cutoffs remain in the full table below.</p>'
+            f'<p>先看前 {_esc(k)} 个结果的表现。这是你要求的最大截断位置（k={_esc(k)}）；'
+            '其他位置的分数保留在下方完整表格里。</p>'
             f'<div class="metric-previews">{"".join(previews)}</div>'
         )
     return (
         '<aside class="comparison-reader" aria-label="Comparison reading guide">'
-        '<h4>Check the comparison scope first / <span lang="zh-CN">先核对比较范围</span></h4>'
-        f'{counts}<p>The common-query count is not the number eligible for every metric. '
-        '<span lang="zh-CN">共同查询数不等于每个指标实际能计算的查询数。</span></p>'
-        '<p>Submitted averages use each run\'s eligible queries; matched averages restrict to shared pools. '
-        '<span lang="zh-CN">各自平均使用各自可算的查询；对齐后平均只比较共同候选范围。平均分更高，还不能据此认定改进。</span> '
-        'Values apply only to the shown eligible queries and reference scope '
-        '(<span lang="zh-CN">仅在上述查询及参考范围内有效</span>).</p>'
-        '<p>Compare runs within one metric card; MRR and NDCG values are not directly comparable. '
-        '<span lang="zh-CN">在同一张指标卡片内比较两个run；MRR与NDCG的分数不能直接比较大小。</span></p>'
-        f'{preview}<p class="muted">MRR rewards an earlier first relevant result; NDCG rewards relevant results near the top. '
-        '<span lang="zh-CN">MRR看首个相关结果的位置；NDCG看相关结果是否排在前面。Not available表示无法计算，不是零分。</span></p>'
-        f'<p><strong>Next step / <span lang="zh-CN">下一步</span>:</strong> {action}</p></aside>'
+        '<h4 lang="zh-CN">这两份结果可以直接比较吗？</h4>'
+        f'{counts}<p lang="zh-CN">下面先比较共同部分，分数只代表标出的查询和计算范围。'
+        '请在同一张卡片内比较两次运行；MRR 和 NDCG 的计分方式不同，不能互相比较大小。</p>'
+        f'{preview}<p lang="zh-CN"><strong>下一步：</strong>{action}</p>'
+        '<details><summary>指标说明与 English reading guide</summary>'
+        '<p lang="zh-CN">MRR 看第一个相关结果出现得有多早；NDCG 看相关结果是否排在前面，以及相关程度。'
+        '“无法计算”表示当前资料不足以给出这个值，不是零分。不同指标可能使用不同数量的查询。</p>'
+        '<p>Compare the two runs within one metric. The main values are matched averages: they use shared query/candidate pools, restricted to metric-eligible queries. '
+        'Per-run averages are folded separately because they may cover different queries. The common-query count is not the number eligible for every metric. '
+        'Values apply only to the shown eligible queries and reference scope. MRR and NDCG values are not directly comparable. '
+        'A missing value is not zero. Expand the full table for statuses, references and excluded query IDs.</p></details></aside>'
     )
 
 
@@ -499,37 +517,40 @@ def render_html(report: Mapping[str, Any]) -> str:
     )
     summary = report.get("summary", {})
     protocol = report.get("protocol", {})
-    protocol_navigation = '<a href="#protocol">Protocol</a>' if protocol else ""
+    protocol_navigation = '<a href="#protocol">评测设置 / Protocol</a>' if protocol else ""
     sections: list[str] = []
     comparison_section = None
     result_navigation = ""
     if summary:
-        sections.append(f'<section id="summary"><h2>Run summary</h2>{_content(summary)}</section>')
+        sections.append(f'<section id="summary"><h2>这份输入包含什么 / Run summary</h2><details><summary>查看数量与技术字段</summary>{_content(summary)}</details></section>')
     if protocol:
         sections.append(
-            f'<section id="protocol"><h2>Evaluation protocol</h2><p class="muted">These choices define what the reported metrics mean. Compare runs only under compatible protocols.</p>{_content(protocol)}</section>'
+            f'<section id="protocol"><h2>这次怎样计算分数 / Evaluation protocol</h2><p lang="zh-CN">计算方式会影响分数。比较前请核对截断位置、同分顺序、标签处理和参考范围是否一致；只看指标名称相同还不够。</p><details><summary>查看全部评测设置 / All settings</summary>{_content(protocol)}</details></section>'
         )
     if isinstance(summary, Mapping) and summary.get("unknown_candidates", 0):
         sections.insert(
             0,
-            f'<section class="boundary"><h2>Relevance coverage is incomplete</h2><p>{_esc(summary["unknown_candidates"])} supplied candidates have no known relevance judgment. Check each metric\'s coverage, reference and stated treatment of unjudged candidates before interpreting results.</p></section>',
+            f'<section class="boundary"><h2>有些项目还没有标签</h2><p lang="zh-CN">输入中有 {_esc(summary["unknown_candidates"])} 个候选项目没有已知标签。部分查询可能因此无法计算分数。请先看每个指标用了多少查询，以及这次怎样处理缺失标签。</p><details><summary>English explanation</summary><p>Relevance coverage is incomplete. Check each metric\'s coverage, reference and stated treatment of unjudged candidates before interpreting results.</p></details></section>',
         )
     for key, title in (
-        ("metrics", "Recomputed metrics"),
+        ("metrics", "重新计算的分数 / Recomputed metrics"),
         ("comparison", "Run comparison"),
         ("comparisons", "Run comparisons"),
-        ("runs", "Compared runs"),
-        ("pairs", "Comparison results"),
-        ("tie_analysis", "Tie sensitivity"),
-        ("duplicates", "Duplicate sensitivity"),
-        ("negative_controls", "Negative controls"),
-        ("checks", "Check coverage"),
-        ("limitations", "Coverage and limitations"),
-        ("provenance", "Reproducibility metadata"),
+        ("runs", "分别查看每次运行 / Compared runs"),
+        ("pairs", "比较结果 / Comparison results"),
+        ("tie_analysis", "同分顺序会影响多少 / Tie sensitivity"),
+        ("duplicates", "重复项目会影响多少 / Duplicate sensitivity"),
+        ("negative_controls", "改变输入顺序后的核查 / Negative controls"),
+        ("checks", "哪些检查已经进行 / Check coverage"),
+        ("limitations", "哪些情况还不能判断 / Coverage and limitations"),
+        ("provenance", "输入来源与运行环境 / Reproducibility metadata"),
     ):
         if key in report and report[key]:
             if key == "metrics":
-                rendered = _partial_perfect_context(report[key]) + _metrics(report[key], "metrics")
+                rendered = (
+                    '<p lang="zh-CN">先看每个分数用了多少查询，再看分数大小。MRR 关注第一个相关结果排得多靠前，NDCG 还考虑其他相关结果的位置和相关程度；两种指标不能直接比大小。展开范围明细，可以查看哪些查询没有参与计算及原因。</p>'
+                    + _partial_perfect_context(report[key]) + _metrics(report[key], "metrics")
+                )
             elif key == "pairs":
                 rendered = _pairwise_results(report)
             elif key == "runs":
@@ -551,7 +572,8 @@ def render_html(report: Mapping[str, Any]) -> str:
         title = finding.get("title", _label(str(code)))
         message = finding.get("message", finding.get("description", ""))
         status = finding.get("status")
-        badge = f'<span class="badge {severity}">{severity.upper()}</span>'
+        severity_label = {"error": "优先处理 / ERROR", "warning": "需要核对 / WARNING", "info": "补充说明 / INFO"}[severity]
+        badge = f'<span class="badge {severity}">{severity_label}</span>'
         state = f'<span class="status">{_esc(status)}</span>' if status is not None else ""
         evidence = finding.get("evidence", finding.get("examples"))
         details = (
@@ -561,6 +583,10 @@ def render_html(report: Mapping[str, Any]) -> str:
         )
         scope = (
             f'<p class="muted">Scope: {_esc(finding["scope"])}</p>' if "scope" in finding else ""
+        )
+        run_context = (
+            f'<p class="muted" lang="zh-CN">对应运行：<strong>{_esc(finding["run_name"])}</strong></p>'
+            if finding.get("run_name") is not None else ""
         )
         next_step = FINDING_NEXT_STEPS.get(str(code))
         targets = (
@@ -581,23 +607,34 @@ def render_html(report: Mapping[str, Any]) -> str:
             f'<p><strong>Next step:</strong> {_esc(next_step)}{related_link}</p>' if next_step else ""
         )
         location = f'<p class="code">JSON: findings[{index}].evidence</p>'
-        cards.append(
-            f'<article class="finding {severity}">{badge}{state}<h3>{_esc(title)}</h3><p>{_esc(message)}</p><p class="code">{_esc(code)}</p>{scope}{action}{location}{details}</article>'
-        )
+        reader_copy = FINDING_COPY_ZH.get(str(code))
+        if reader_copy:
+            heading, explanation, next_action = reader_copy
+            link = f' <a href="#{related[0]}">查看对应结果</a>。' if related else ""
+            cards.append(
+                f'<article class="finding {severity}">{badge}<h3 lang="zh-CN">{_esc(heading)}</h3>{run_context}'
+                f'<p lang="zh-CN">{_esc(explanation)}</p><p lang="zh-CN"><strong>下一步：</strong>{_esc(next_action)}{link}</p>'
+                f'<details><summary>English description / 技术详情与证据</summary>{state}<h4>{_esc(title)}</h4><p>{_esc(message)}</p>'
+                f'<p class="code">{_esc(code)}</p>{scope}{action}{location}{details}</details></article>'
+            )
+        else:
+            cards.append(
+                f'<article class="finding {severity}">{badge}{state}<h3>{_esc(title)}</h3>{run_context}<p>{_esc(message)}</p><p class="code">{_esc(code)}</p>{scope}{action}{location}{details}</article>'
+            )
     findings_html = (
         "".join(cards)
-        or '<div class="empty"><h3>No findings were reported.</h3><p>This means the configured checks found no issues in the supplied data. It does not establish data provenance, relevance quality, or absence of leakage.</p></div>'
+        or '<div class="empty"><h3>这次检查没有列出问题 / No findings were reported.</h3><p lang="zh-CN">你可以保留报告和评测设置，用于下次比较。这只说明当前检查没有发现问题；标签是否正确、数据是否有泄漏，仍需要其他证据。</p><p>This means the configured checks found no issues in the supplied data. It does not establish data provenance, relevance quality, or absence of leakage.</p></div>'
     )
     sections.insert(
         0,
-        f'<section id="findings"><h2>Findings <span class="count">{len(findings)}</span></h2><p class="muted">A warning identifies a condition to investigate; it does not by itself prove an invalid evaluation.</p>{findings_html}</section>',
+        f'<section id="findings"><h2>需要核对的地方 / Findings <span class="count">{len(findings)}</span></h2><p class="muted" lang="zh-CN">先读每项发现和建议的下一步，再按需展开证据。警告提醒你核对一种情况，并不等于评测一定有错。</p>{findings_html}</section>',
     )
     if comparison_section:
         sections.insert(0, comparison_section)
     if report.get("demo_note"):
         sections.insert(
             0,
-            f'<section class="boundary"><h2>Synthetic demonstration</h2><p>{_esc(report["demo_note"])}</p></section>',
+            f'<section class="boundary"><h2>这是一份演示报告 / Synthetic demonstration</h2><p lang="zh-CN">数据中有意放入了同分、重复项目和缺失标签，用来演示怎样发现和核对问题。请把它当作阅读练习，不代表真实模型的效果。</p><details><summary>查看原始说明 / Original note</summary><p>{_esc(report["demo_note"])}</p></details></section>',
         )
     boundaries = (
         "RankProbe inspects the supplied predictions and optional judgments. It cannot establish that labels are correct, "
@@ -615,9 +652,9 @@ def render_html(report: Mapping[str, Any]) -> str:
 .comparison-reader{{padding:16px;background:#f2f7fa;border:1px solid var(--line);border-radius:6px}}.comparison-reader h4{{margin:0 0 10px;font-size:17px}}.metric-previews{{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:14px}}.metric-preview{{padding:14px;background:white;border:1px solid var(--line);border-radius:6px;min-width:0;overflow-wrap:anywhere}}.metric-preview h4{{font-family:ui-monospace,monospace}}.metric-preview dl{{margin:0}}.metric-preview dt{{font-weight:600;margin-top:10px}}.metric-preview dd{{margin:3px 0 0}}.metric-preview small{{color:var(--muted)}}
 *{{box-sizing:border-box}}h1,h2,h3,p,summary,li{{overflow-wrap:anywhere}}body{{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}}a{{color:var(--accent);text-underline-offset:3px}}a:focus-visible,summary:focus-visible{{outline:3px solid #dc8400;outline-offset:4px}}.skip{{position:absolute;top:-70px;left:16px;padding:10px;background:white}}.skip:focus{{top:10px;z-index:1}}header{{background:#102c40;color:white;padding:44px max(24px,calc((100vw - 1080px)/2)) 34px}}.eyebrow{{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9ed5d2}}h1{{font-size:clamp(30px,5vw,44px);line-height:1.15;margin:10px 0}}header p{{color:#ccdae5;margin:10px 0}}nav{{display:flex;flex-wrap:wrap;gap:20px;margin-top:20px}}nav a{{color:#c1eee8}}main{{max-width:1128px;margin:auto;padding:24px}}.stats{{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}}.stat{{background:white;border:1px solid var(--line);border-top:4px solid var(--accent);padding:16px 20px;border-radius:8px}}.stat.error{{border-top-color:var(--error)}}.stat.warning{{border-top-color:#bd790e}}.stat strong{{display:block;font-size:30px;line-height:1.1}}.stat span{{color:var(--muted)}}section{{background:var(--paper);border:1px solid var(--line);border-radius:10px;margin:0 0 22px;padding:24px}}h2{{font-size:22px;margin:0 0 12px;line-height:1.3}}h3{{font-size:18px;line-height:1.4;margin:10px 0}}p{{margin:10px 0}}.muted,.code,.status{{color:var(--muted)}}.code{{font:12px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere}}.finding{{border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:6px;margin-top:16px;padding:18px}}.finding.error{{border-left-color:var(--error)}}.finding.warning{{border-left-color:#bd790e}}.badge{{display:inline-block;padding:2px 8px;font-size:11px;font-weight:750;letter-spacing:.06em;border-radius:4px;background:#e6f3f2;color:#0b5559}}.badge.error{{background:#fce9e9;color:var(--error)}}.badge.warning{{background:#fff1cf;color:var(--warning)}}.status{{font-size:12px;margin-left:10px}}.count{{font-size:14px;color:var(--muted)}}details{{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}}summary{{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0}}.table-wrap{{overflow-x:auto;margin-top:14px}}table{{width:100%;border-collapse:collapse;font-size:14px;text-align:left}}th{{background:#f2f6f9;font-weight:650}}th,td{{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere;min-width:100px;max-width:520px}}td{{white-space:pre-wrap}}.boundary{{background:#f8f3e7;border-color:#e6d9b9}}.empty{{padding:14px;background:#f1f6f8;border-radius:6px}}footer{{max-width:1080px;margin:0 auto;padding:0 24px 30px;color:var(--muted);font-size:13px}}@media(max-width:600px){{header{{padding:30px 18px}}main{{padding:14px}}section{{padding:17px}}.stat{{padding:12px}}.stat strong{{font-size:25px}}.stat span{{font-size:12px}}.finding{{padding:13px}}nav{{gap:14px;font-size:14px}}}}@media print{{body{{background:white}}header{{background:white;color:var(--ink);padding:12px 0}}header p{{color:var(--muted)}}nav,.skip{{display:none}}main{{padding:0}}section,.finding{{break-inside:avoid}}details> *{{display:block}}footer{{padding:0}}}}
 </style></head><body><a class="skip" href="#main">Skip to report</a>
-<header><div class="eyebrow">Ranking evaluation diagnostics</div><h1>RankProbe</h1><p>{subtitle}</p><nav aria-label="Report navigation">{result_navigation}<a href="#findings">Findings</a>{protocol_navigation}<a href="#boundaries">Interpretation limits</a><a href="report.json" download>Download JSON</a></nav></header>
-<main id="main"><div class="stats" aria-label="Finding counts"><div class="stat error"><strong>{counts["error"]}</strong><span>Error findings</span></div><div class="stat warning"><strong>{counts["warning"]}</strong><span>Warnings</span></div><div class="stat"><strong>{counts["info"]}</strong><span>Informational findings</span></div></div>
-{"".join(sections)}<section id="boundaries" class="boundary"><h2>Interpretation limits</h2><p>{boundaries}</p><p>Evidence tables show at most {EVIDENCE_LIMIT} entries per finding. The downloadable JSON contains the evidence stored by the audit engine; engine-level sampling limits may also apply.</p></section></main>
+<header><div class="eyebrow">推荐与检索评测核查 · Ranking evaluation diagnostics</div><h1>RankProbe</h1><p>{subtitle}</p><nav aria-label="Report navigation">{result_navigation}<a href="#findings">需要核对的地方 / Findings</a>{protocol_navigation}<a href="#boundaries">怎样理解这份报告</a><a href="report.json" download>下载详细结果 JSON</a></nav></header>
+<main id="main"><div class="stats" aria-label="Finding counts"><div class="stat error"><strong>{counts["error"]}</strong><span>优先处理 / Errors</span></div><div class="stat warning"><strong>{counts["warning"]}</strong><span>需要核对 / Warnings</span></div><div class="stat"><strong>{counts["info"]}</strong><span>补充说明 / Information</span></div></div>
+{"".join(sections)}<section id="boundaries" class="boundary"><h2>怎样理解这份报告 / Interpretation limits</h2><p lang="zh-CN">报告检查的是你提供的预测和标签。它不能证明标签正确、候选项目能代表实际业务，或训练数据没有泄漏。缺失标签也不表示项目不相关，除非你明确选择了这种评测假设。先按发现定位原始数据，再决定是否需要调整导出或比较条件。</p><p lang="zh-CN">每项发现最多展示 {EVIDENCE_LIMIT} 条证据。下载的 JSON 保留检查程序存储的证据；程序内部也可能只保存了部分样例。</p><details><summary>English explanation</summary><p>{boundaries}</p><p>Evidence tables show at most {EVIDENCE_LIMIT} entries per finding. The downloadable JSON contains the evidence stored by the audit engine; engine-level sampling limits may also apply.</p></details></section></main>
 <footer>RankProbe · Offline report · Schema {_esc(report.get("schema_version", "unspecified"))}. No external resources are requested by this document.</footer></body></html>"""
 
 
