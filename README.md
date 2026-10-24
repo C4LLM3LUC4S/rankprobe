@@ -29,6 +29,8 @@ Have saved MTEB retrieval predictions? The [score-file recipe](docs/mteb-workflo
 
 ## Quick start
 
+Before expanding a job, read [what makes a useful audit and how workload grows](docs/reliability.md). Local installations do not share a central compute service; large exports and all-pairs comparisons still consume local memory.
+
 For an immediate source preview, download and fully extract this repository, then run `python quickstart.py`. It opens a built-in synthetic report without installation or network access and preserves earlier reports. See [START_HERE](START_HERE.md). The regular installed-package path follows below.
 
 Requires Python 3.10 or newer. The complete [GitHub release bundle](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a5) includes offline instructions, packages, source and original fixtures. The commands below use a source checkout; PyPI is not part of this release.

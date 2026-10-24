@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Write JSON incrementally to the staging file rather than retaining another full serialized report. Preserve output bytes, complete records, existing-report protection and two-file replacement behavior. Parsing and comparisons still hold data in memory.
+- Explain a concrete decision/action/recheck acceptance path, local workload and all-pairs growth; collect approximate workload and task in the existing issue form without requesting private exports.
+
 ## 0.1.0a5 — 2026-10-24
 
 - Publish the independent repository's offline bundle, wheel and source distribution with an exact public commit, per-file manifest and SHA-256 sums. Preserve the earlier alpha-4 release in the course repository.

@@ -12,6 +12,8 @@ RankProbe serves recommendation, retrieval and reranking users who already have 
 
 Priorities: complete own-export onboarding, make findings and scope understandable, then improve specific capture/recovery obstacles supported by reproducible input. Add integrations only when users can retain identities, scores, judgments and provenance. More metrics or automatic repair would not by themselves answer these questions.
 
+For an actual decision/action/recheck record and larger-export guidance, see [practical value and workload](reliability.md). Record a task as useful only with evidence from that task; developer fixtures and downloads are separate evidence.
+
 Engineering cases and a guided public-data action are available. Independent user adoption, previously unnoticed real incidents, repeat use and measured active human time remain unverified. A synthetic trap or machine runtime cannot establish those outcomes. Input rows and report identifiers remain local; users decide what they may share.
 
 中文：验收看“自己的导出→看懂发现→采取有依据的行动→复核”，不看功能数量。报告生成成功、测试通过和示例中的差异，只证明各自路径；真实帮助需要实际任务证据。没有标签仍可查结构问题，无法计算的指标保持未知，不为了显示分数补零。
