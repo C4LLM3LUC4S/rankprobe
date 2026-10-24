@@ -18,6 +18,11 @@ body:
     validations:
       required: true
   - type: textarea
+    id: workload
+    attributes:
+      label: Approximate workload and task / 规模与要解决的问题
+      description: Input format, approximate rows/queries, number of runs, and the decision you were trying to make. Counts are enough; do not attach private exports.
+  - type: textarea
     id: command
     attributes:
       label: Command and minimal reproduction

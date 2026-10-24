@@ -750,8 +750,6 @@ def write_report(
 ) -> tuple[Path, Path]:
     """Stage both outputs before replacement; retain unrelated files and roll back failures."""
     output = Path(output_dir)
-    json_text = json.dumps(report, ensure_ascii=False, indent=2, allow_nan=False) + "\n"
-    html_text = render_html(report)
     if (output.exists() or output.is_symlink()) and not output.is_dir():
         raise NotADirectoryError(
             f"--out must name a directory; {output} is a file or unresolved link. "
@@ -771,8 +769,12 @@ def write_report(
     with tempfile.TemporaryDirectory(prefix=".rankprobe-", dir=output) as temporary:
         staging = Path(temporary)
         staged = [staging / path.name for path in destinations]
-        for path, content in zip(staged, (json_text, html_text)):
-            path.write_text(content, encoding="utf-8")
+        # Keep the full JSON in the staging file, rather than another copy in
+        # memory. Neither final filename is touched until both outputs finish.
+        with staged[0].open("w", encoding="utf-8") as handle:
+            json.dump(report, handle, ensure_ascii=False, indent=2, allow_nan=False)
+            handle.write("\n")
+        staged[1].write_text(render_html(report), encoding="utf-8")
         backups: dict[Path, Path] = {}
         installed: list[Path] = []
         reserved: list[Path] = []

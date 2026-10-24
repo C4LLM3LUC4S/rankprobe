@@ -24,6 +24,8 @@ Macro averages cover eligible queries present in each prediction file. Queries f
 
 The audit runs locally and does not need a network connection. It reads whole input files into memory; it is designed for inspectable offline exports rather than a claim of streaming, billion-row scale. No universal memory or throughput guarantee is made.
 
+JSON is staged incrementally instead of allocating a second complete serialized report. Rows, comparison structures and HTML generation still use memory. See [practical value and workload guidance](reliability.md) before expanding a comparison or interpreting a clean report as an experiment certificate.
+
 HTML reports are self-contained. They include identifiers and selected examples from the input, while JSON can contain additional audit detail. Renaming IDs is pseudonymization; relational structure and scores can still be sensitive. Do not upload reports to public issues without reviewing them. The optional adapter omits user IDs but does not make third-party data legally redistributable.
 
 ## Early software
