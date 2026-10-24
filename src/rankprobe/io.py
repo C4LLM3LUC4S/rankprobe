@@ -77,7 +77,14 @@ def _records(path: Path, required: set[str], format: str) -> Iterator[tuple[int,
                     raise InputError(f"{path}: duplicate CSV column names")
                 missing = required - set(fields)
                 if missing:
-                    raise InputError(f"{path}: missing columns: {', '.join(sorted(missing))}")
+                    raise InputError(
+                        f"{path}: missing columns: {', '.join(sorted(missing))}. "
+                        "CSV must be comma-separated with exact column names. "
+                        "Export a new CSV from the original source; keep the original files, "
+                        "identifiers, numeric values, supplied and unknown labels, and row order unchanged.\n"
+                        "CSV 需要用英文逗号分隔，列名要与输入要求一致。请从原始来源另存新 CSV；"
+                        "保留原文件、编号、数值、已有和未知标签，以及行顺序。"
+                    )
                 for record in reader:
                     if None in record:
                         raise InputError(f"{path}:{reader.line_num}: extra cells beyond CSV header")

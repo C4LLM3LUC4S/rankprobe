@@ -12,6 +12,14 @@ Go back to the program or dataset that produced the file and export a **new UTF-
 
 The same recovery route applies to predictions and independent qrels in CSV, JSONL or TREC. Keep the file's existing format and column contract. Renaming a file, changing the format flag or choosing a missing-label policy does not change its encoding. The recovery preserves data only when the new source export actually matches; a successfully generated report alone does not prove this.
 
+### CSV header errors
+
+If the error says `missing columns`, check the source export's separator and exact column names. CSV needs ordinary commas, not tabs or semicolons; changing a TSV filename to `.csv` does not convert its contents. Prediction headers need `query_id,item_id,score` and qrels need `query_id,item_id,relevance`. RankProbe does not guess a different delimiter or rename columns automatically.
+
+Export a **new CSV from the original source** with comma-separated fields and the required names. Keep the original file, identifier spelling, numeric values, every supplied judgment and row order. Blank prediction labels must remain unknown. Do not drop rows, fill missing values or invent scores to make a file pass. Ordinary quoted fields may contain tabs or semicolons; they remain field content under the same CSV parsing rules.
+
+看到 `missing columns` 时，先检查导出时的分隔符和列名。CSV 需要英文逗号；把制表符文件改成 `.csv` 后缀，并不会改变内容。回到原始来源，按提示中的准确列名另存一份 CSV，保留原文件、编号、数值、已有标签和行顺序；空缺的预测标签仍是未知。程序不会自动猜分隔符，也不会为了通过检查而补零或删行。
+
 ### CSV parser locations
 
 CSV parsing failures report the source, the parser's reason and the physical line at which parsing stopped. This counts lines consumed from the text input, not completed records: a quoted field may span several lines. See [Python's reader line-number definition](https://docs.python.org/3/library/csv.html#csv.csvreader.line_num). The stop position does not identify where the malformed record began; an unterminated quote can consume the rest of the file before the parser reports the error.
