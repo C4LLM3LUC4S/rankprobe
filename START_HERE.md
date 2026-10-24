@@ -33,20 +33,23 @@ python quickstart.py --run "before=my exports/before.run" --run "after=my export
 
 - 找不到文件：检查终端所在目录和文件路径，带空格的路径要加引号。
 - 提示 `cannot read input as UTF-8`：文件没能按 UTF-8 读出来。回到生成它的程序，另存一份 UTF-8 文件，再用新路径重试；原文件先留着。不要选择“忽略”或“替换”错误字符，编号、分数、标签、缺失值和行顺序都要保持原样。具体检查方法见[文件编码说明](docs/input-format.md#text-encoding-errors)。
+- 提示 `missing columns`：先检查英文逗号和准确列名。回到生成文件的程序另存一份 CSV，保留原文件、编号、数值、已有和未知标签及行顺序；不要只改后缀或补零。具体见[CSV 表头恢复](docs/input-format.md#csv-header-errors)。
 - 已有报告，或上级路径不是文件夹：程序会先停下，不再读取输入或计算报告。用 `--out` 换一个保存位置，原文件和报告先留着；免安装入口不会覆盖已有目录。
 - 覆盖报告时保存失败：先保留原目录。若提示 **Backups retained**，按[备份恢复说明](docs/source-recovery.md#覆盖报告时保存失败了)找回原文件，再决定是否重新运行。
 - 显示 `Not available` 或“无法计算”：查看标签和查询范围，不能把它当作零分。
 - 命令返回退出码 `1`：报告已生成，但有需要优先处理的问题，打开打印的 HTML 路径查看。
 - 命令返回退出码 `2`：这次操作失败，按终端提示检查命令、输入格式或输出权限。
 
-alpha-7 离线包已包含这些参数、保存位置检查和原报告备份恢复说明，见[本版说明](docs/releases/0.1.0a7.md)。旧报告先原样保留；换版本时，按[源码与报告恢复](docs/source-recovery.md)保存输入、命令和对应源码。
+alpha-8 离线包已包含 CSV 表头恢复指引、这些参数、保存位置检查和原报告备份恢复说明，见[本版说明](docs/releases/0.1.0a8.md)。旧报告先原样保留；换版本时，按[源码与报告恢复](docs/source-recovery.md)保存输入、命令和对应源码。
 
 ## English
 
 With Python 3.10+, extract the complete source ZIP and run `python quickstart.py`. It previews the checked-out source with a built-in synthetic fixture, creates a unique report folder and opens the local HTML. It installs nothing and does not alter an existing environment. Use `--no-open` on headless systems, or `--out` with a new writable folder. For installation and real exports, follow the [main guide](README.md).
 
-Verified alpha-4 offline packages remain at their [original release location](https://github.com/C4LLM3LUC4S/rechorus-patt-reproduction/releases/tag/v0.1.0a4). The independent repository's [alpha-5 release](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a5) is also preserved. The [alpha-7 bundle](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a7) includes the current launcher, early output-path checks and retained-backup recovery; see [source and report recovery](docs/source-recovery.md) before rerunning old inputs.
+Verified alpha-4 offline packages remain at their [original release location](https://github.com/C4LLM3LUC4S/rechorus-patt-reproduction/releases/tag/v0.1.0a4). The independent repository's [alpha-5 release](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a5) is also preserved. The [alpha-8 bundle](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a8) includes CSV header recovery guidance, the current launcher, early output-path checks and retained-backup recovery; see [source and report recovery](docs/source-recovery.md) before rerunning old inputs.
 
 Use `python quickstart.py --input predictions.csv` for your own file, or repeat `--run NAME=FILE` at least twice to compare. Optional `--qrels`, `--cutoffs` and explicit format flags use the existing parser. Unknown labels remain unknown. Exit 1 still produces a report; exit 2 is a failed operation. See [product tasks and acceptance](docs/product-scope.md).
 
 If a file cannot be read as UTF-8, re-export a new UTF-8 copy from its original source and keep the original. Do not skip or replace undecodable bytes. Check identifiers, numeric values, labels, unknowns and row order before retrying; see [encoding recovery](docs/input-format.md#text-encoding-errors).
+
+If CSV reports missing columns, check comma separators and exact field names, then export a new copy from the original producer. Preserve identifiers, scores, all supplied labels, unknown labels and row order. See [CSV header recovery](docs/input-format.md#csv-header-errors).
