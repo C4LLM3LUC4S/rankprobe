@@ -557,3 +557,42 @@ jobs:
         run: >-
           python scripts/publish_github_release.py --assets release-assets
           --notes docs/releases/0.1.0a6.md --publish
+
+  recover-alpha6:
+    name: Verify and publish original alpha-6 draft bytes
+    needs: [test, python315-core, trec-reference, beir-workflow, recbole-workflow, rechorus-workflow, mteb-workflow]
+    if: >-
+      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      startsWith(github.event.head_commit.message, 'Recover RankProbe v0.1.0a6')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Obtain the original public source without changing this checkout
+        run: git fetch --no-tags origin 22cd7b8cf2ba47553df233e456f54cfaed7885ad
+      - name: Verify original assets, install offline and publish only the fixed draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          python scripts/recover_alpha6_release.py
+          --out "${{ runner.temp }}/rankprobe-alpha6-recovery" --publish
+      - name: Retain recovery checks and original downloaded assets
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: alpha6-original-draft-recovery
+          path: |
+            ${{ runner.temp }}/rankprobe-alpha6-recovery/summary.json
+            ${{ runner.temp }}/rankprobe-alpha6-recovery/downloads
+            ${{ runner.temp }}/rankprobe-alpha6-recovery/offline task/*.txt
+            ${{ runner.temp }}/rankprobe-alpha6-recovery/offline task/first
+            ${{ runner.temp }}/rankprobe-alpha6-recovery/offline task/recheck
+          if-no-files-found: ignore
+          retention-days: 14

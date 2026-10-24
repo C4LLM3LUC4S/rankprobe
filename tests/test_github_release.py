@@ -145,3 +145,98 @@ def test_verified_draft_publishes_after_all_downloads(assets, monkeypatch, capsy
     assert actions == ["download", "edit"]
     assert remote["draft"] is False
     assert json.loads(capsys.readouterr().out)["assets_verified"] == 5
+
+
+def test_missing_list_entry_uses_graphql_id_for_the_complete_draft_flow(assets, monkeypatch):
+    calls, remote = prepare_draft(assets, monkeypatch)
+    original_gh = release.gh
+    def fallback(*arguments, **kwargs):
+        if arguments[:1] == ("api",):
+            if "releases?" in arguments[1]:
+                return SimpleNamespace(stdout="[]")
+            if arguments[1] == "graphql":
+                return SimpleNamespace(stdout=json.dumps({"data": {"repository": {"release": {"databaseId": 42}}}}))
+            if arguments[1] == f"repos/{release.REPOSITORY}/releases/42":
+                return SimpleNamespace(stdout=json.dumps({**remote, "id": 42,
+                    "url": f"https://api.github.com/repos/{release.REPOSITORY}/releases/42"}))
+        return original_gh(*arguments, **kwargs)
+    monkeypatch.setattr(release, "gh", fallback)
+    release.publish(assets, assets / "notes", True)
+    assert [call[1] for call in calls if call[0] == "release"] == ["download", "edit"]
+    assert remote["draft"] is False
+
+
+@pytest.mark.parametrize("response", [{"errors": [{"message": "refused"}]}, {"data": None},
+                                      {"data": {"repository": None}}])
+def test_graphql_errors_are_not_treated_as_absent_releases(monkeypatch, response):
+    def gh(*arguments, **kwargs):
+        return SimpleNamespace(stdout="[]" if "releases?" in arguments[1] else json.dumps(response))
+    monkeypatch.setattr(release, "gh", gh)
+    with pytest.raises(ValueError, match="GraphQL"):
+        release.find_release("v0.1.0a6")
+
+
+@pytest.mark.parametrize("change", [{"id": 43}, {"tag_name": "v0.1.0a5"},
+                                    {"url": "https://api.github.com/repos/other/repo/releases/42"}])
+def test_graphql_fallback_rejects_a_different_identity(monkeypatch, change):
+    def gh(*arguments, **kwargs):
+        if "releases?" in arguments[1]:
+            result = []
+        elif arguments[1] == "graphql":
+            result = {"data": {"repository": {"release": {"databaseId": 42}}}}
+        else:
+            result = {"id": 42, "tag_name": "v0.1.0a6",
+                      "url": f"https://api.github.com/repos/{release.REPOSITORY}/releases/42", **change}
+        return SimpleNamespace(stdout=json.dumps(result))
+    monkeypatch.setattr(release, "gh", gh)
+    with pytest.raises(ValueError, match="identity differs"):
+        release.find_release("v0.1.0a6")
+
+
+def test_created_but_unreadable_draft_has_bounded_wait_and_is_not_recreated(assets, monkeypatch, tmp_path):
+    calls, lookups, waits = [], [], []
+    notes = tmp_path / "notes.md"
+    notes.write_text("Original notes", encoding="utf-8")
+    monkeypatch.setattr(release, "find_release", lambda tag: lookups.append(tag))
+    monkeypatch.setattr(release.time, "sleep", waits.append)
+    monkeypatch.setattr(release.subprocess, "check_output", lambda *args, **kwargs: COMMIT.encode())
+    def gh(*arguments, **kwargs):
+        calls.append(arguments)
+        return SimpleNamespace(returncode=1 if arguments[0] == "api" else 0,
+                               stdout="", stderr="Not Found (HTTP 404)")
+    monkeypatch.setattr(release, "gh", gh)
+    with pytest.raises(ValueError, match="preserve the existing draft"):
+        release.publish(assets, notes, True)
+    assert len(lookups) == 5 and waits == [1, 2, 4]
+    assert sum(call[:2] == ("release", "create") for call in calls) == 1
+    assert not any(call[:2] in {("release", "edit"), ("release", "upload")} for call in calls)
+
+
+@pytest.mark.parametrize("status", [403, 404, 503])
+def test_fallback_by_id_http_errors_are_not_treated_as_absent_releases(monkeypatch, status):
+    def gh(*arguments, **kwargs):
+        if "releases?" in arguments[1]:
+            return SimpleNamespace(stdout="[]")
+        if arguments[1] == "graphql":
+            return SimpleNamespace(stdout=json.dumps({"data": {"repository": {"release": {"databaseId": 42}}}}))
+        raise release.subprocess.CalledProcessError(1, arguments, stderr=f"HTTP {status}")
+    monkeypatch.setattr(release, "gh", gh)
+    with pytest.raises(release.subprocess.CalledProcessError):
+        release.find_release("v0.1.0a6")
+
+
+def test_created_draft_with_different_source_is_not_published(assets, monkeypatch, tmp_path):
+    calls = []
+    results = iter([None, {"target_commitish": "b" * 40}])
+    notes = tmp_path / "notes.md"
+    notes.write_text("Original notes", encoding="utf-8")
+    monkeypatch.setattr(release, "find_release", lambda tag: next(results))
+    monkeypatch.setattr(release.subprocess, "check_output", lambda *args, **kwargs: COMMIT.encode())
+    def gh(*arguments, **kwargs):
+        calls.append(arguments)
+        return SimpleNamespace(returncode=1 if arguments[0] == "api" else 0,
+                               stdout="", stderr="Not Found (HTTP 404)")
+    monkeypatch.setattr(release, "gh", gh)
+    with pytest.raises(ValueError, match="source changed"):
+        release.publish(assets, notes, True)
+    assert [call[1] for call in calls if call[0] == "release"] == ["create"]
