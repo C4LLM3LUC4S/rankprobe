@@ -50,6 +50,30 @@ class OutputPreflightTests(unittest.TestCase):
                     comparison.assert_not_called()
                     self.assertIn("--overwrite", error)
 
+    def test_file_parent_rejects_before_input_loading_at_each_depth(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = self.input_file(root)
+            commands = [["audit", str(source)],
+                        ["compare", "--run", f"left={source}", "--run", f"right={source}"],
+                        ["demo"]]
+            for arguments in commands:
+                parent = root / (arguments[0] + " parent file")
+                parent.write_bytes(b"keep the original parent file")
+                for parts in (("new report",), ("missing", "new report")):
+                    with self.subTest(command=arguments[0], depth=len(parts)):
+                        target = parent.joinpath(*parts)
+                        with patch.object(cli, "_load_checked", wraps=cli._load_checked) as loading, \
+                                patch.object(cli, "audit_run", wraps=cli.audit_run) as audit, \
+                                patch.object(cli, "compare_runs", wraps=cli.compare_runs) as comparison:
+                            status, error = self.invoke([*arguments, "--out", str(target)])
+                        self.assertEqual(status, 2, error)
+                        self.assertEqual(parent.read_bytes(), b"keep the original parent file")
+                        loading.assert_not_called()
+                        audit.assert_not_called()
+                        comparison.assert_not_called()
+                        self.assertIn("--out", error)
+
     def test_unrelated_files_and_explicit_overwrite_still_allow_work(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

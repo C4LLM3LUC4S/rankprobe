@@ -40,7 +40,7 @@ This identifies the source bytes available when the report is created, including
 
 The output report pair must not coincide with any prediction or judgment input, including an existing file alias. Such a destination is rejected even with `--overwrite`; choose a separate report directory.
 
-An occupied report path is checked before the CLI reads prediction or judgment files or computes the audit. Choose a new `--out` directory to keep earlier results. An existing directory containing only unrelated files is still allowed; `--overwrite` still explicitly replaces just the two named report files. The writer checks again when saving, so an early check does not authorize overwriting a report created by another job.
+An occupied report path or a parent path that is a file is checked before the CLI reads prediction or judgment files or computes the audit. Choose a new `--out` directory under a folder to keep earlier results. An existing directory containing only unrelated files is still allowed; `--overwrite` still explicitly replaces just the two named report files. The writer checks again when saving, so an early check does not authorize overwriting a report created by another job.
 
 Give concurrent jobs separate `--out` directories. Without `--overwrite`, a second writer to the same report pair is refused even when both jobs began before either report existed. After an interrupted write, inspect both files before retrying; use a fresh directory to retain what remains, or use `--overwrite` only when you intend to replace that pair.
 

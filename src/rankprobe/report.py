@@ -753,6 +753,12 @@ def check_report_destination(output_dir: str | Path, *, overwrite: bool = False)
             f"--out must name a directory; {output} is a file or unresolved link. "
             "Choose another --out directory."
         )
+    for parent in output.parents:
+        if (parent.exists() or parent.is_symlink()) and not parent.is_dir():
+            raise NotADirectoryError(
+                f"上级路径 {parent} 不是文件夹，请换一个保存位置。 / "
+                f"Output parent {parent} is not a directory; choose another --out directory."
+            )
     destinations = [output / "report.json", output / "report.html"]
     if any(path.is_dir() for path in destinations):
         raise IsADirectoryError(
