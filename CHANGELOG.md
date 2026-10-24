@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0a5 — 2026-10-24
+
+- Publish the independent repository's offline bundle, wheel and source distribution with an exact public commit, per-file manifest and SHA-256 sums. Preserve the earlier alpha-4 release in the course repository.
+- Include the no-install real CSV/JSONL/TREC entry point, per-finding evidence and run/pair navigation, and UTF-8 recovery guidance. Inputs, unknown judgments and evaluation semantics remain unchanged.
+- Explain how to retain reports, original exports, commands and their matching public source. A report or hash alone cannot reconstruct missing inputs or certify their origin.
+
 ## Source-preview convenience — 2026-10-22
 
 - Add `quickstart.py` and bilingual `START_HERE.md` for a no-install source preview with unique report folders and optional browser opening.

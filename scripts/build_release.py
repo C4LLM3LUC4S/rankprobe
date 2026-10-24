@@ -131,6 +131,8 @@ on Windows, `../.venv/bin/python` on macOS/Linux).
 Missing judgments remain unknown. A finding or a matching metric is not a model-quality certificate.
 未标注不等于零分；报告用于定位和解释评测问题，不认证模型质量。
 
+Keep this entire extracted folder with your reports. See [source and report recovery](source/docs/source-recovery.md).
+
 `BUILD_INFO.json` records the exact public commit. `MANIFEST.json` hashes every
 other member. The release's `SHA256SUMS` verifies the downloaded ZIP and packages.
 """.encode("utf-8")
@@ -142,7 +144,7 @@ other member. The release's `SHA256SUMS` verifies the downloaded ZIP and package
     bundle = output / f"RankProbe-{version}.zip"
     with zipfile.ZipFile(bundle, "x", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
         for name, data in sorted(members.items()):
-            entry = zipfile.ZipInfo(name, date_time=(2026, 10, 22, 0, 0, 0))
+            entry = zipfile.ZipInfo(name, date_time=(2026, 10, 24, 0, 0, 0))
             entry.compress_type = zipfile.ZIP_DEFLATED
             entry.external_attr = 0o100644 << 16
             archive.writestr(entry, data)

@@ -38,13 +38,13 @@ python quickstart.py --run "before=my exports/before.run" --run "after=my export
 - 命令返回退出码 `1`：报告已生成，但有需要优先处理的问题，打开打印的 HTML 路径查看。
 - 命令返回退出码 `2`：这次操作失败，按终端提示检查命令、输入格式或输出权限。
 
-原 alpha-4 离线包发布得更早，不包含这个源码入口的新参数。
+alpha-5 离线包已包含这些参数。旧报告先原样保留；换版本时，按[源码与报告恢复](docs/source-recovery.md)保存输入、命令和对应源码。
 
 ## English
 
 With Python 3.10+, extract the complete source ZIP and run `python quickstart.py`. It previews the checked-out source with a built-in synthetic fixture, creates a unique report folder and opens the local HTML. It installs nothing and does not alter an existing environment. Use `--no-open` on headless systems, or `--out` with a new writable folder. For installation and real exports, follow the [main guide](README.md).
 
-Verified alpha-4 offline packages remain at their [original release location](https://github.com/C4LLM3LUC4S/rechorus-patt-reproduction/releases/tag/v0.1.0a4). Those archives are immutable and predate this source convenience launcher.
+Verified alpha-4 offline packages remain at their [original release location](https://github.com/C4LLM3LUC4S/rechorus-patt-reproduction/releases/tag/v0.1.0a4). Those archives remain unchanged. The alpha-5 bundle in this repository includes the current launcher; see [source and report recovery](docs/source-recovery.md) before rerunning old inputs.
 
 Use `python quickstart.py --input predictions.csv` for your own file, or repeat `--run NAME=FILE` at least twice to compare. Optional `--qrels`, `--cutoffs` and explicit format flags use the existing parser. Unknown labels remain unknown. Exit 1 still produces a report; exit 2 is a failed operation. See [product tasks and acceptance](docs/product-scope.md).
 
