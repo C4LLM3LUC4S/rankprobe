@@ -15,7 +15,7 @@ from . import __version__
 from .audit import audit_run, compare_runs
 from .io import _float, _input_format, read_predictions, read_qrels
 from .model import Protocol
-from .report import write_report
+from .report import check_report_destination, write_report
 
 
 _CORE_FILES = (
@@ -272,6 +272,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         elif arguments.command == "compare":
             inputs.extend(path for _, path in arguments.run)
         _protect_inputs(inputs, arguments.out)
+        check_report_destination(arguments.out, overwrite=arguments.overwrite)
         protocol = _protocol(arguments)
         qrels, sources = None, []
         if arguments.qrels_format != "auto" and not arguments.qrels:

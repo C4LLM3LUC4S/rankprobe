@@ -745,27 +745,36 @@ def render_html(report: Mapping[str, Any]) -> str:
 <footer>RankProbe · Offline report · Schema {_esc(report.get("schema_version", "unspecified"))}. No external resources are requested by this document.</footer></body></html>"""
 
 
-def write_report(
-    report: Mapping[str, Any], output_dir: str | Path, *, overwrite: bool = False
-) -> tuple[Path, Path]:
-    """Stage both outputs before replacement; retain unrelated files and roll back failures."""
+def check_report_destination(output_dir: str | Path, *, overwrite: bool = False) -> None:
+    """Read-only preflight; the writer still reserves and checks final paths."""
     output = Path(output_dir)
     if (output.exists() or output.is_symlink()) and not output.is_dir():
         raise NotADirectoryError(
             f"--out must name a directory; {output} is a file or unresolved link. "
             "Choose another --out directory."
         )
-    output.mkdir(parents=True, exist_ok=True)
     destinations = [output / "report.json", output / "report.html"]
-    exists_message = (
-        f"Report already exists in {output}. Choose a new --out directory or pass --overwrite."
-    )
     if any(path.is_dir() for path in destinations):
         raise IsADirectoryError(
             "A report destination is a directory; choose another --out directory."
         )
     if not overwrite and any(path.exists() or path.is_symlink() for path in destinations):
-        raise FileExistsError(exists_message)
+        raise FileExistsError(
+            f"Report already exists in {output}. Choose a new --out directory or pass --overwrite."
+        )
+
+
+def write_report(
+    report: Mapping[str, Any], output_dir: str | Path, *, overwrite: bool = False
+) -> tuple[Path, Path]:
+    """Stage both outputs before replacement; retain unrelated files and roll back failures."""
+    output = Path(output_dir)
+    check_report_destination(output, overwrite=overwrite)
+    output.mkdir(parents=True, exist_ok=True)
+    destinations = [output / "report.json", output / "report.html"]
+    exists_message = (
+        f"Report already exists in {output}. Choose a new --out directory or pass --overwrite."
+    )
     with tempfile.TemporaryDirectory(prefix=".rankprobe-", dir=output) as temporary:
         staging = Path(temporary)
         staged = [staging / path.name for path in destinations]
