@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0a8 — 2026-10-25
+
+- When a CSV header lacks required columns, explain comma separators, exact column names and a fresh export from the original producer. Keep the original, identifiers, values, supplied judgments, unknowns and row order; do not guess a different delimiter or rename fields.
+- Cover prediction and independent-qrels rejection followed by a deliberate source re-export, and keep valid quoted tabs as field content. Parsing, numerical metrics and report data remain unchanged.
+- Ship the accepted guidance with matching source and new offline assets while preserving all earlier releases. Developer recovery checks are not independent adoption or benefit evidence.
+
 ## 0.1.0a7 — 2026-10-24
 
 - Reject existing outputs and invalid parent paths before reading inputs or computing a report, including the source launcher. Preserve original inputs and reports, and identify a fresh-output recovery path.

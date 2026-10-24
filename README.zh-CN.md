@@ -8,9 +8,9 @@
 
 > RankProbe 现在从独立仓库提供版本下载；原课程仓库中的 alpha-4 发行仍原样保留。
 
-**当前发行版是 `0.1.0a7` alpha。** 保存位置有问题时会尽早提示；覆盖报告失败、原文件暂时放不回去时，会留下备份并告诉你去哪找。输入和指标规则不变。见 [本版说明](docs/releases/0.1.0a7.md)；已交付范围、验证边界和维护规则见 [首版交付说明](docs/initial-delivery.md)。独立采用与实际收益继续作为后续验证事项。
+**当前发行版是 `0.1.0a8` alpha。** CSV 提示缺少列时，会说明怎样核对英文逗号和准确列名，并从原始来源另存新文件。编号、数值、已有标签与未知标签都要保留；解析和指标规则不变。见 [本版说明](docs/releases/0.1.0a8.md)；已交付范围、验证边界和维护规则见 [首版交付说明](docs/initial-delivery.md)。独立采用与实际收益继续作为后续验证事项。
 
-**[下载完整离线发行包](https://github.com/C4LLM3LUC4S/rankprobe/releases/download/v0.1.0a7/RankProbe-0.1.0a7.zip)** · [发行说明与校验文件](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a7)。完整解压后打开 `START_HERE.md`，即可离线安装随包提供的 wheel；不需要 Git、API 密钥或现成实验。[公开源码](https://github.com/C4LLM3LUC4S/rankprobe)位于本仓库根目录；课程复现项目另行保留。
+**[下载完整离线发行包](https://github.com/C4LLM3LUC4S/rankprobe/releases/download/v0.1.0a8/RankProbe-0.1.0a8.zip)** · [发行说明与校验文件](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a8)。完整解压后打开 `START_HERE.md`，即可离线安装随包提供的 wheel；不需要 Git、API 密钥或现成实验。[公开源码](https://github.com/C4LLM3LUC4S/rankprobe)位于本仓库根目录；课程复现项目另行保留。
 
 Windows 建议选择较短的解压路径；如果创建环境时 pip/ensurepip 提示路径过长，请换一个较短的文件夹重新开始。
 
@@ -147,7 +147,7 @@ python -m pytest
 python -m ruff check .
 python -m build
 python scripts/check_distribution.py
-python scripts/check_wheel_install.py --wheel dist/rankprobe-0.1.0a7-py3-none-any.whl
+python scripts/check_wheel_install.py --wheel dist/rankprobe-0.1.0a8-py3-none-any.whl
 ```
 
 完整测试矩阵覆盖 Windows/Ubuntu 的 Python 3.10、3.12、3.13，同时验证干净环境中的 wheel 安装和两个命令行入口。另有两平台 Python 3.15 的核心源码安装、构建与隔离 wheel 检查；这不代表 3.15 上的完整测试、NumPy 适配器或原生框架已经验证，3.14 也未纳入矩阵。见 [安装验证说明](docs/installation-checks.md)，实际结果以对应提交的运行记录为准。
