@@ -8,9 +8,9 @@
 
 > RankProbe 现在从独立仓库提供版本下载；原课程仓库中的 alpha-4 发行仍原样保留。
 
-**当前发行版是 `0.1.0a5` alpha。** 这版把自己的文件接入、发现与证据导航、编码错误恢复一起带进了下载包。已交付范围、验证边界和维护规则见 [首版交付说明](docs/initial-delivery.md)；独立采用与实际收益继续作为后续验证事项。
+**当前发行版是 `0.1.0a6` alpha。** 写报告时少占一份额外内存；写入出错时，原报告仍会保留。输入和指标规则不变。见 [本版说明](docs/releases/0.1.0a6.md)；已交付范围、验证边界和维护规则见 [首版交付说明](docs/initial-delivery.md)。独立采用与实际收益继续作为后续验证事项。
 
-**[下载完整离线发行包](https://github.com/C4LLM3LUC4S/rankprobe/releases/download/v0.1.0a5/RankProbe-0.1.0a5.zip)** · [发行说明与校验文件](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a5)。完整解压后打开 `START_HERE.md`，即可离线安装随包提供的 wheel；不需要 Git、API 密钥或现成实验。[公开源码](https://github.com/C4LLM3LUC4S/rankprobe)位于本仓库根目录；课程复现项目另行保留。
+**[下载完整离线发行包](https://github.com/C4LLM3LUC4S/rankprobe/releases/download/v0.1.0a6/RankProbe-0.1.0a6.zip)** · [发行说明与校验文件](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a6)。完整解压后打开 `START_HERE.md`，即可离线安装随包提供的 wheel；不需要 Git、API 密钥或现成实验。[公开源码](https://github.com/C4LLM3LUC4S/rankprobe)位于本仓库根目录；课程复现项目另行保留。
 
 Windows 建议选择较短的解压路径；如果创建环境时 pip/ensurepip 提示路径过长，请换一个较短的文件夹重新开始。
 
@@ -80,7 +80,7 @@ python -m rankprobe compare --run baseline=examples/clean.csv --run changed=exam
 
 ## 输入自己的结果
 
-源码免安装入口也支持自己的文件：`python quickstart.py --input predictions.csv`，或用两次 `--run NAME=FILE` 比较。可加已有 `--qrels` 和 `--cutoffs`，自动打开新报告；详见[开始使用](START_HERE.md#直接检查自己的文件)。沿用核心默认协议；更多协议选项仍用完整 CLI。alpha-5 下载包已包含这个入口；保留旧结果的方法见[源码与报告恢复](docs/source-recovery.md)。
+源码免安装入口也支持自己的文件：`python quickstart.py --input predictions.csv`，或用两次 `--run NAME=FILE` 比较。可加已有 `--qrels` 和 `--cutoffs`，自动打开新报告；详见[开始使用](START_HERE.md#直接检查自己的文件)。沿用核心默认协议；更多协议选项仍用完整 CLI。alpha-6 下载包已包含这个入口；保留旧结果的方法见[源码与报告恢复](docs/source-recovery.md)。
 
 每行是一次排序事件中的一个候选项。`query_id` 表示事件，不应直接把同一用户的不同时刻合并成一个查询。
 
@@ -147,7 +147,7 @@ python -m pytest
 python -m ruff check .
 python -m build
 python scripts/check_distribution.py
-python scripts/check_wheel_install.py --wheel dist/rankprobe-0.1.0a5-py3-none-any.whl
+python scripts/check_wheel_install.py --wheel dist/rankprobe-0.1.0a6-py3-none-any.whl
 ```
 
 完整测试矩阵覆盖 Windows/Ubuntu 的 Python 3.10、3.12、3.13，同时验证干净环境中的 wheel 安装和两个命令行入口。另有两平台 Python 3.15 的核心源码安装、构建与隔离 wheel 检查；这不代表 3.15 上的完整测试、NumPy 适配器或原生框架已经验证，3.14 也未纳入矩阵。见 [安装验证说明](docs/installation-checks.md)，实际结果以对应提交的运行记录为准。

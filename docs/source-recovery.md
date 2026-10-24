@@ -18,7 +18,7 @@
 3. 按该包的 `START_HERE.md` 创建独立环境，离线安装其中的 wheel；源码说明中的路径以 `source/` 为起点。
 4. 用原输入和原命令写到一个新的输出目录，保留旧报告。先核对查询、候选、标签、覆盖范围和协议，再比较同一指标。
 
-原 alpha-4 下载仍在[课程仓库原发行页](https://github.com/C4LLM3LUC4S/rechorus-patt-reproduction/releases/tag/v0.1.0a4)。alpha-5 来自本独立仓库，两份发行都保留自己的源码与校验文件。
+原 alpha-4 下载仍在[课程仓库原发行页](https://github.com/C4LLM3LUC4S/rechorus-patt-reproduction/releases/tag/v0.1.0a4)。[alpha-5](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a5) 与 [alpha-6](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a6) 来自本独立仓库；各版都保留自己的源码与校验文件，不能互相覆盖。
 
 没有原输入或当时命令，就先把旧报告当作已有记录阅读，不要补零、编造标签或声称已经复现。跨指标资格规则变更时，按[指标语义](metrics.md)从原始输入重新计算，不能直接相减旧条件均值。
 

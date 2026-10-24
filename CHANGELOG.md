@@ -1,9 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.1.0a6 — 2026-10-24
 
 - Write JSON incrementally to the staging file rather than retaining another full serialized report. Preserve output bytes, complete records, existing-report protection and two-file replacement behavior. Parsing and comparisons still hold data in memory.
 - Explain a concrete decision/action/recheck acceptance path, local workload and all-pairs growth; collect approximate workload and task in the existing issue form without requesting private exports.
+- Include these maintenance changes in a new offline ZIP, wheel and source distribution, bound to their exact public source commit. Update the default download and installation links while preserving earlier releases and notes. Core metric calculations and unknown-label rules remain unchanged.
 
 ## 0.1.0a5 — 2026-10-24
 
