@@ -8,6 +8,7 @@ import math
 import os
 from pathlib import Path
 import re
+import sys
 import tempfile
 from typing import Any, Mapping
 
@@ -770,6 +771,44 @@ def check_report_destination(output_dir: str | Path, *, overwrite: bool = False)
         )
 
 
+class ReportRecoveryError(OSError):
+    """A previous report remains in retained backups after an incomplete rollback."""
+
+    def __init__(self, directory: Path, pending: Mapping[Path, Path],
+                 restored: list[Path], original: BaseException):
+        self.recovery_dir = directory
+        self.backup_paths = {destination.name: backup for destination, backup in pending.items()}
+        self.restored_paths = tuple(restored)
+        self.original_error = original
+        super().__init__(
+            f"旧报告未能全部恢复到原位置。尚未恢复的原文件备份保留在 {directory}。"
+            "请先保留该目录及原报告目录，把原文件复制到新目录后再打开报告。 / "
+            f"Backups retained in {directory}. Files ending in .backup are previous report files; "
+            "keep them together with originals already restored in the report directory. "
+            f"Original write error: {original}"
+        )
+
+
+def _discard_backups(backups: Mapping[Path, Path], directory: Path | None) -> None:
+    # Only these owned files are removed, after commit or a complete rollback.
+    retained = False
+    for backup in backups.values():
+        try:
+            backup.unlink(missing_ok=True)
+        except OSError:
+            retained = True
+    if directory is not None:
+        try:
+            directory.rmdir()
+        except OSError:
+            retained = True
+    if retained:
+        try:
+            print(f"备份目录仍保留：{directory}。 / Backup directory retained: {directory}", file=sys.stderr)
+        except (OSError, UnicodeError):
+            pass
+
+
 def write_report(
     report: Mapping[str, Any], output_dir: str | Path, *, overwrite: bool = False
 ) -> tuple[Path, Path]:
@@ -791,13 +830,16 @@ def write_report(
             handle.write("\n")
         staged[1].write_text(render_html(report), encoding="utf-8")
         backups: dict[Path, Path] = {}
+        backup_directory: Path | None = None
         installed: list[Path] = []
         reserved: list[Path] = []
         try:
             if overwrite:
                 for destination in destinations:
                     if destination.exists() or destination.is_symlink():
-                        backup = staging / (destination.name + ".backup")
+                        if backup_directory is None:
+                            backup_directory = Path(tempfile.mkdtemp(prefix=".rankprobe-backup-", dir=output))
+                        backup = backup_directory / (destination.name + ".backup")
                         os.replace(destination, backup)
                         backups[destination] = backup
             else:
@@ -816,14 +858,27 @@ def write_report(
             for source, destination in zip(staged, destinations):
                 os.replace(source, destination)
                 installed.append(destination)
-        except OSError:
-            for destination in installed:
-                destination.unlink(missing_ok=True)
-            for destination in reserved:
-                destination.unlink(missing_ok=True)
+        except (OSError, KeyboardInterrupt) as failure:
+            for destination in dict.fromkeys(installed + reserved):
+                try:
+                    destination.unlink(missing_ok=True)
+                except OSError:
+                    pass
+            pending: dict[Path, Path] = {}
+            restored: list[Path] = []
             for destination, backup in backups.items():
-                os.replace(backup, destination)
+                try:
+                    os.replace(backup, destination)
+                    restored.append(destination)
+                except OSError:
+                    pending[destination] = backup
+            if pending:
+                # The persistent backup directory is outside automatic staging
+                # cleanup. Try every restoration before reporting what remains.
+                raise ReportRecoveryError(backup_directory, pending, restored, failure) from failure
+            _discard_backups(backups, backup_directory)
             raise
+        _discard_backups(backups, backup_directory)
     return destinations[0], destinations[1]
 
 
