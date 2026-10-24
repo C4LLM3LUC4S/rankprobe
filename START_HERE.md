@@ -39,13 +39,13 @@ python quickstart.py --run "before=my exports/before.run" --run "after=my export
 - 命令返回退出码 `1`：报告已生成，但有需要优先处理的问题，打开打印的 HTML 路径查看。
 - 命令返回退出码 `2`：这次操作失败，按终端提示检查命令、输入格式或输出权限。
 
-alpha-6 离线包已包含这些参数，以及分段写入报告和完整任务验收说明，见[本版说明](docs/releases/0.1.0a6.md)。旧报告先原样保留；换版本时，按[源码与报告恢复](docs/source-recovery.md)保存输入、命令和对应源码。
+alpha-7 离线包已包含这些参数、保存位置检查和原报告备份恢复说明，见[本版说明](docs/releases/0.1.0a7.md)。旧报告先原样保留；换版本时，按[源码与报告恢复](docs/source-recovery.md)保存输入、命令和对应源码。
 
 ## English
 
 With Python 3.10+, extract the complete source ZIP and run `python quickstart.py`. It previews the checked-out source with a built-in synthetic fixture, creates a unique report folder and opens the local HTML. It installs nothing and does not alter an existing environment. Use `--no-open` on headless systems, or `--out` with a new writable folder. For installation and real exports, follow the [main guide](README.md).
 
-Verified alpha-4 offline packages remain at their [original release location](https://github.com/C4LLM3LUC4S/rechorus-patt-reproduction/releases/tag/v0.1.0a4). The independent repository's [alpha-5 release](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a5) is also preserved. The [alpha-6 bundle](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a6) includes staged report writing and the current launcher; see [source and report recovery](docs/source-recovery.md) before rerunning old inputs.
+Verified alpha-4 offline packages remain at their [original release location](https://github.com/C4LLM3LUC4S/rechorus-patt-reproduction/releases/tag/v0.1.0a4). The independent repository's [alpha-5 release](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a5) is also preserved. The [alpha-7 bundle](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a7) includes the current launcher, early output-path checks and retained-backup recovery; see [source and report recovery](docs/source-recovery.md) before rerunning old inputs.
 
 Use `python quickstart.py --input predictions.csv` for your own file, or repeat `--run NAME=FILE` at least twice to compare. Optional `--qrels`, `--cutoffs` and explicit format flags use the existing parser. Unknown labels remain unknown. Exit 1 still produces a report; exit 2 is a failed operation. See [product tasks and acceptance](docs/product-scope.md).
 

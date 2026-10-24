@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0a7 — 2026-10-24
+
+- Reject existing outputs and invalid parent paths before reading inputs or computing a report, including the source launcher. Preserve original inputs and reports, and identify a fresh-output recovery path.
+- Keep original report files in a separately retained backup directory if overwrite installation and rollback both fail. Attempt every restoration; print the actual location of any remaining originals. Cleanup locks do not turn a complete report into a failed operation.
+- Include the fixes, recovery guide and matching source in new offline assets. Preserve prior versions. Input parsing, metric calculations, unknown labels and report JSON are unchanged.
+
 ## 0.1.0a6 — 2026-10-24
 
 - Write JSON incrementally to the staging file rather than retaining another full serialized report. Preserve output bytes, complete records, existing-report protection and two-file replacement behavior. Parsing and comparisons still hold data in memory.
