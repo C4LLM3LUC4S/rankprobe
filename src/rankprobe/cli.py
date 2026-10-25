@@ -85,6 +85,41 @@ def _run(value: str) -> tuple[str, Path]:
     return name.strip(), Path(filename)
 
 
+def _mrr_drop(value: str) -> tuple[str, float]:
+    try:
+        metric, drop = value.split("=", 1)
+        return metric, _float(drop, "MRR drop")
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("use mrr@K=DROP, for example mrr@10=0.01") from exc
+
+
+def _guard_policy(arguments: argparse.Namespace) -> dict | None:
+    if arguments.command != "compare":
+        return None
+    values = (arguments.max_mrr_drop, arguments.min_guard_queries, arguments.guard_baseline_sha256)
+    if not any(value is not None for value in values):
+        return None
+    if any(value is None for value in values):
+        raise ValueError("use --max-mrr-drop, --min-guard-queries and --guard-baseline-sha256 together")
+    from .regression_guard import make_policy
+
+    metric, drop = arguments.max_mrr_drop
+    policy = make_policy(metric, drop, arguments.min_guard_queries, arguments.guard_baseline_sha256)
+    if len(arguments.run) != 2:
+        raise ValueError("the optional MRR guard needs exactly two --run inputs; the first is the frozen baseline")
+    if int(metric.split("@")[1]) not in arguments.cutoffs:
+        raise ValueError("the guarded MRR cutoff must be included in --cutoffs")
+    return policy
+
+
+def _guard_source_identity() -> dict:
+    try:
+        digest = hashlib.sha256(files("rankprobe").joinpath("regression_guard.py").read_bytes()).hexdigest()
+    except OSError:
+        return {"status": "unavailable", "file": "regression_guard.py"}
+    return {"status": "available", "file": "regression_guard.py", "sha256": digest}
+
+
 def _common(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--qrels", type=Path, help="CSV/JSONL judgments or four-column TREC qrels"
@@ -177,6 +212,12 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="NAME=FILE",
         help="repeat once per run; use distinct names",
     )
+    compare.add_argument("--max-mrr-drop", type=_mrr_drop, metavar="mrr@K=DROP",
+                         help="optional declared absolute MRR tolerance; requires both guard options below")
+    compare.add_argument("--min-guard-queries", type=int, metavar="N",
+                         help="declared minimum count; every submitted query must remain eligible")
+    compare.add_argument("--guard-baseline-sha256", metavar="HEX",
+                         help="predeclared SHA256 of the first --run input, which is the frozen baseline")
     for command in (audit, compare):
         command.add_argument(
             "--input-format",
@@ -266,6 +307,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     arguments = parser.parse_args(argv)
     try:
+        guard_policy = _guard_policy(arguments)
         inputs = [arguments.qrels] if arguments.qrels else []
         if arguments.command == "audit":
             inputs.append(arguments.predictions)
@@ -320,6 +362,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             "sources": sources,
             "source_path_policy": "Only filenames are stored; absolute local paths and raw command lines are omitted.",
         }
+        if guard_policy is not None:
+            from .regression_guard import decide
+
+            report["regression_guard"] = decide(report, guard_policy, sources)
+            report["provenance"]["regression_guard"] = {
+                "policy": guard_policy, "source_identity": _guard_source_identity(),
+            }
         json_path, html_path = write_report(report, arguments.out, overwrite=arguments.overwrite)
     except (ValueError, OSError) as exc:
         _console(f"rankprobe: {exc}", file=sys.stderr)
@@ -333,7 +382,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     _console(f"HTML: {html_path.resolve()}")
     _console(f"JSON: {json_path.resolve()}")
-    return _finding_exit(report, arguments.fail_on)
+    guard = report.get("regression_guard")
+    if guard:
+        _console(f"MRR guard: {guard['status']} — {guard['next_step']}")
+    return max(_finding_exit(report, arguments.fail_on), int(bool(guard and guard["status"] != "pass")))
 
 
 if __name__ == "__main__":
