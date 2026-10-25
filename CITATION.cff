@@ -6,7 +6,7 @@ authors:
   - given-names: "Borui"
     family-names: "Ma"
     alias: "C4LLM3LUC4S"
-version: 0.1.0a9
+version: 0.1.0a10
 abstract: >-
   A local tool for inspecting candidate-score ties, duplicated items, relevance
   coverage, and run comparability in exported ranking evaluations. The software
@@ -14,4 +14,4 @@ abstract: >-
 
 repository-code: "https://github.com/C4LLM3LUC4S/rankprobe"
 url: "https://github.com/C4LLM3LUC4S/rankprobe"
-date-released: 2026-10-25
+date-released: 2026-10-26

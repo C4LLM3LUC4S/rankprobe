@@ -40,13 +40,13 @@ python quickstart.py --run "before=my exports/before.run" --run "after=my export
 - 命令返回退出码 `1`：报告已生成，但有需要优先处理的问题，打开打印的 HTML 路径查看。
 - 命令返回退出码 `2`：这次操作失败，按终端提示检查命令、输入格式或输出权限。
 
-alpha-9 离线包已包含这些入口、CSV 表头恢复和旧报告备份说明；MTEB 转换报错还会指出需要检查的原始记录，见[本版说明](docs/releases/0.1.0a9.md)。旧报告先原样保留；换版本时，按[源码与报告恢复](docs/source-recovery.md)保存输入、命令和对应源码。
+alpha-10 离线包还提供[可选 MRR 检查](docs/mrr-regression.md)：先固定基线、标签和协议，再用完整 CLI 检查新导出是否超过事先约定的下降量。`quickstart.py` 不提供这些参数。比较条件不足时不会放行，报告仍会保留。见[本版说明](docs/releases/0.1.0a10.md)。旧报告先原样保留；换版本时，按[源码与报告恢复](docs/source-recovery.md)保存输入、命令和对应源码。
 
 ## English
 
 With Python 3.10+, extract the complete source ZIP and run `python quickstart.py`. It previews the checked-out source with a built-in synthetic fixture, creates a unique report folder and opens the local HTML. It installs nothing and does not alter an existing environment. Use `--no-open` on headless systems, or `--out` with a new writable folder. For installation and real exports, follow the [main guide](README.md).
 
-Verified alpha-4 offline packages remain at their [original release location](https://github.com/C4LLM3LUC4S/rechorus-patt-reproduction/releases/tag/v0.1.0a4). The independent repository's [alpha-5 release](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a5) is also preserved. The [alpha-9 bundle](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a9) includes the MTEB recipe's source-entry diagnostics, CSV header guidance, the current launcher, early output-path checks and retained-backup recovery; see [source and report recovery](docs/source-recovery.md) before rerunning old inputs.
+Verified alpha-4 offline packages remain at their [original release location](https://github.com/C4LLM3LUC4S/rechorus-patt-reproduction/releases/tag/v0.1.0a4). The independent repository's [alpha-5 release](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a5) is also preserved. The [alpha-10 bundle](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a10) adds an [optional MRR regression check](docs/mrr-regression.md) through the full CLI, rather than `quickstart.py`. Freeze the baseline and evaluation conditions before using it. See [source and report recovery](docs/source-recovery.md) before rerunning old inputs.
 
 Use `python quickstart.py --input predictions.csv` for your own file, or repeat `--run NAME=FILE` at least twice to compare. Optional `--qrels`, `--cutoffs` and explicit format flags use the existing parser. Unknown labels remain unknown. Exit 1 still produces a report; exit 2 is a failed operation. See [product tasks and acceptance](docs/product-scope.md).
 

@@ -7,13 +7,13 @@
 > This repository contains RankProbe only. Versioned downloads now come from this repository; the original alpha-4 release remains unchanged in the course repository.
 > RankProbe 现在从独立仓库提供版本下载；原课程仓库中的 alpha-4 发行仍原样保留。
 
-**Community release `0.1.0a9` — find the rejected entry in a saved MTEB export, still alpha.** The local conversion recipe now names the file, selected subset/split and query/document pair when a score or ID is invalid. Inspect that source entry, retain the original file and retry with a new export. Core parsing and metric rules are unchanged. See the [release notes](docs/releases/0.1.0a9.md) and [delivery scope and maintenance policy](docs/initial-delivery.md). Independent adoption and measured human benefit remain future validation work.
+**Community release `0.1.0a10` — check a predeclared MRR drop rule in CI, still alpha.** Pin a baseline and compare one new export under fixed conditions. The optional check retains its report whether it passes, exceeds your tolerance or lacks the required comparable scope. Ordinary comparisons and metric formulas are unchanged. See the [release notes](docs/releases/0.1.0a10.md) and [delivery scope and maintenance policy](docs/initial-delivery.md). Independent adoption and measured human benefit remain future validation work.
 
 **Find out when a ranking score depends on ties, duplicated candidates, or a changed evaluation pool.**
 
 Give RankProbe your exported recommendation or retrieval scores. It checks for tied scores, repeated items, missing queries and changed candidate sets, then shows what to inspect next. You get a local HTML report to read and JSON for further analysis. Relevance labels are optional: without them, structural checks still work, while label-dependent scores may be unavailable. It uses the Python standard library and needs no model inference, cloud account or API key.
 
-**[Download the complete offline bundle](https://github.com/C4LLM3LUC4S/rankprobe/releases/download/v0.1.0a9/RankProbe-0.1.0a9.zip)** · [Release notes and checksums](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a9). Extract it and open `START_HERE.md`; no Git or package-index connection is needed to install its bundled wheel. [Public source](https://github.com/C4LLM3LUC4S/rankprobe) is on the default branch.
+**[Download the complete offline bundle](https://github.com/C4LLM3LUC4S/rankprobe/releases/download/v0.1.0a10/RankProbe-0.1.0a10.zip)** · [Release notes and checksums](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a10). Extract it and open `START_HERE.md`; no Git or package-index connection is needed to install its bundled wheel. [Public source](https://github.com/C4LLM3LUC4S/rankprobe) is on the default branch.
 
 [中文说明](README.zh-CN.md) · [Input contract](docs/input-format.md) · [Metric semantics](docs/metrics.md) · [CLI / Python API](docs/usage.md) · [First local report](docs/try-it.md) · [Limitations](docs/limitations.md)
 
@@ -33,7 +33,7 @@ Before expanding a job, read [what makes a useful audit and how workload grows](
 
 For an immediate source preview, download and fully extract this repository, then run `python quickstart.py`. It opens a built-in synthetic report without installation or network access and preserves earlier reports. See [START_HERE](START_HERE.md). The regular installed-package path follows below.
 
-Requires Python 3.10 or newer. The complete [GitHub release bundle](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a9) includes offline instructions, packages, source and original fixtures. The commands below use a source checkout; PyPI is not part of this release.
+Requires Python 3.10 or newer. The complete [GitHub release bundle](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a10) includes offline instructions, packages, source and original fixtures. The commands below use a source checkout; PyPI is not part of this release.
 
 On Windows, choose a short extraction path. If creating the environment fails with a long-path hint from pip/ensurepip, start again from a shorter folder.
 
@@ -86,6 +86,7 @@ In a comparison, start with **Comparison results**: submitted-run values sit bes
 | Does a query list the same item repeatedly? | Duplicate pairs, score or relevance conflicts, and a declared deduplication policy |
 | Are two runs being evaluated on the same cases? | Query coverage, per-query candidate sets, relevance differences, and evidence that requires manual follow-up |
 | What assumptions produced these metrics? | Cutoffs, gain, tie policy, unjudged treatment, relevance source, and denominator scope |
+| Should CI flag an MRR drop against my fixed baseline? | An [optional declared drop rule](docs/mrr-regression.md), with a pinned baseline, strict full-query coverage and a saved pass/fail/blocked report |
 
 A tie is often legitimate. Repeated candidates can come from a declared sampling protocol. RankProbe reports their effects; it does not label every occurrence a bug or silently claim one universal correct score.
 
@@ -150,12 +151,12 @@ python -m pytest
 python -m ruff check .
 python -m build
 python scripts/check_distribution.py
-python scripts/check_wheel_install.py --wheel dist/rankprobe-0.1.0a9-py3-none-any.whl
+python scripts/check_wheel_install.py --wheel dist/rankprobe-0.1.0a10-py3-none-any.whl
 ```
 
 The full-test CI matrix targets Python 3.10, 3.12, and 3.13 on Ubuntu and Windows, including fresh built-wheel installation and both command-line entry points. Separate Python 3.15 jobs on both systems check core source installation, distribution builds and the isolated wheel; they do not establish full-suite, NumPy-adapter or native-framework coverage on 3.15. Python 3.14 is not in this matrix. See [installation checks](docs/installation-checks.md) and inspect the exact commit's workflow runs for results.
 
-The bounded [initial engineering scope](docs/initial-delivery.md) is complete; `0.1.0a9` remains an alpha. The [verification record](docs/verification.md) distinguishes executed checks from pending evidence. There are no claimed independent external adopters, revenue, benchmark certification, or published research results. [The validation plan](docs/validation-plan.md) and [roadmap](docs/roadmap.md) describe what would establish practical value. Contributions should add an independently checkable example and document changed semantics. Please report problems with a small synthetic input instead of uploading private data.
+The bounded [initial engineering scope](docs/initial-delivery.md) is complete; `0.1.0a10` remains an alpha. The [verification record](docs/verification.md) distinguishes executed checks from pending evidence. There are no claimed independent external adopters, revenue, benchmark certification, or published research results. [The validation plan](docs/validation-plan.md) and [roadmap](docs/roadmap.md) describe what would establish practical value. Contributions should add an independently checkable example and document changed semantics. Please report problems with a small synthetic input instead of uploading private data.
 
 ## License and citation
 

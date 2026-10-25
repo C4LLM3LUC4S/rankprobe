@@ -8,9 +8,9 @@
 
 > RankProbe 现在从独立仓库提供版本下载；原课程仓库中的 alpha-4 发行仍原样保留。
 
-**当前发行版是 `0.1.0a9` alpha。** 转换 MTEB 预测文件时，如果某条分数或编号不合法，说明中的转换代码会指出文件、已选范围和具体查询/文档。按这个位置检查原始导出，再另存新文件重试；原文件先留着。核心解析和指标规则不变。见 [本版说明](docs/releases/0.1.0a9.md)；已交付范围、验证边界和维护规则见 [首版交付说明](docs/initial-delivery.md)。独立采用与实际收益继续作为后续验证事项。
+**当前发行版是 `0.1.0a10` alpha。** 想在 CI 里检查“MRR 是否比固定基线下降太多”，现在可以事先声明容忍值。检查会保留报告，说明通过、下降超限，还是比较条件不足；普通比较和指标公式保持不变。见 [本版说明](docs/releases/0.1.0a10.md)；已交付范围、验证边界和维护规则见 [首版交付说明](docs/initial-delivery.md)。独立采用与实际收益继续作为后续验证事项。
 
-**[下载完整离线发行包](https://github.com/C4LLM3LUC4S/rankprobe/releases/download/v0.1.0a9/RankProbe-0.1.0a9.zip)** · [发行说明与校验文件](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a9)。完整解压后打开 `START_HERE.md`，即可离线安装随包提供的 wheel；不需要 Git、API 密钥或现成实验。[公开源码](https://github.com/C4LLM3LUC4S/rankprobe)位于本仓库根目录；课程复现项目另行保留。
+**[下载完整离线发行包](https://github.com/C4LLM3LUC4S/rankprobe/releases/download/v0.1.0a10/RankProbe-0.1.0a10.zip)** · [发行说明与校验文件](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a10)。完整解压后打开 `START_HERE.md`，即可离线安装随包提供的 wheel；不需要 Git、API 密钥或现成实验。[公开源码](https://github.com/C4LLM3LUC4S/rankprobe)位于本仓库根目录；课程复现项目另行保留。
 
 Windows 建议选择较短的解压路径；如果创建环境时 pip/ensurepip 提示路径过长，请换一个较短的文件夹重新开始。
 
@@ -24,6 +24,10 @@ cd rankprobe
 ## 什么时候用它
 
 如果两次推荐或检索实验的分数不同，RankProbe 可以帮你先检查：有没有漏掉查询、候选项目是否相同、同分和重复项目是否影响排序。它读取你导出的分数及可选标签，生成本地 HTML 报告，说明发现了什么、涉及哪些数据，以及下一步可以核对什么。JSON 文件保留详细结果，方便继续分析。无需重新训练模型、云账户或 API 密钥；核心只依赖 Python 标准库。
+
+| 想完成什么 | 从哪里开始 |
+| --- | --- |
+| 在 CI 中检查新导出是否超过事先约定的 MRR 下降量 | [可选 MRR 规则](docs/mrr-regression.md)：固定基线和条件，核对完整查询范围，保存通过、超限或条件不足的报告 |
 
 [English](README.md) · [输入格式](docs/input-format.md) · [指标定义](docs/metrics.md) · [首次本地报告](docs/try-it.md) · [能力边界](docs/limitations.md)
 
@@ -147,7 +151,7 @@ python -m pytest
 python -m ruff check .
 python -m build
 python scripts/check_distribution.py
-python scripts/check_wheel_install.py --wheel dist/rankprobe-0.1.0a9-py3-none-any.whl
+python scripts/check_wheel_install.py --wheel dist/rankprobe-0.1.0a10-py3-none-any.whl
 ```
 
 完整测试矩阵覆盖 Windows/Ubuntu 的 Python 3.10、3.12、3.13，同时验证干净环境中的 wheel 安装和两个命令行入口。另有两平台 Python 3.15 的核心源码安装、构建与隔离 wheel 检查；这不代表 3.15 上的完整测试、NumPy 适配器或原生框架已经验证，3.14 也未纳入矩阵。见 [安装验证说明](docs/installation-checks.md)，实际结果以对应提交的运行记录为准。
