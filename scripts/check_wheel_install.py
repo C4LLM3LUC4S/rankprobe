@@ -21,6 +21,13 @@ class GateError(ValueError):
     """A named installation or execution gate did not pass."""
 
 
+CORE_MODULES = {
+    "__init__.py", "__main__.py", "audit.py", "cli.py", "demo.py",
+    "io.py", "metrics.py", "model.py", "report.py",
+}
+DECISION_MODULES = {"regression_guard.py"}
+
+
 def require(condition: bool, message: str) -> None:
     if not condition:
         raise GateError(message)
@@ -52,7 +59,7 @@ def clean_environment(venv: Path) -> dict[str, str]:
 
 def run(
     stage: str, arguments: list[str], *, cwd: Path, environment: dict[str, str],
-    expected_error: str | None = None,
+    expected_error: str | None = None, expected_exit: int = 0,
 ) -> str:
     try:
         result = subprocess.run(
@@ -64,7 +71,8 @@ def run(
     except OSError as exc:
         raise GateError(f"{stage}: could not start the subprocess") from exc
     if expected_error is None:
-        require(result.returncode == 0, f"{stage}: subprocess exited {result.returncode}")
+        require(result.returncode == expected_exit,
+                f"{stage}: subprocess exited {result.returncode}, expected {expected_exit}")
     else:
         require(result.returncode == 2, f"{stage}: expected invalid-input/output status 2")
         require(not result.stdout, f"{stage}: refusal wrote success output")
@@ -148,12 +156,16 @@ def check(wheel: Path, checkout: Path) -> dict:
         names = [name for name in package.namelist() if name.endswith(".dist-info/METADATA")]
         require(len(names) == 1, "wheel: expected exactly one distribution metadata file")
         metadata = BytesParser().parsebytes(package.read(names[0]))
-        core_hashes = {
+        package_hashes = {
             name.removeprefix("rankprobe/"): hashlib.sha256(package.read(name)).hexdigest()
             for name in package.namelist()
             if name.startswith("rankprobe/") and name.count("/") == 1 and name.endswith(".py")
         }
-        require(bool(core_hashes), "wheel: core Python source files are missing")
+        require(CORE_MODULES <= set(package_hashes), "wheel: legacy core Python source files are missing")
+        require(set(package_hashes) <= CORE_MODULES | DECISION_MODULES,
+                "wheel: Python module has no declared source-identity contract")
+        core_hashes = {name: package_hashes[name] for name in CORE_MODULES}
+        decision_hashes = {name: package_hashes[name] for name in DECISION_MODULES if name in package_hashes}
         manifest = json.dumps(core_hashes, sort_keys=True, separators=(",", ":")).encode("ascii")
         source_identity = {
             "scheme": "rankprobe-core-python-v1", "status": "available",
@@ -337,6 +349,39 @@ def check(wheel: Path, checkout: Path) -> dict:
             require(source["input_format"] == "trec", "compare: TREC provenance missing")
         for name, path in fixtures.items():
             require(digest(path) == fixture_hashes[name], "source fixture changed during check")
+        if "regression_guard.py" in decision_hashes:
+            baseline = workspace / "guard baseline.csv"
+            candidate = workspace / "guard candidate.csv"
+            baseline.write_text("query_id,item_id,score,relevance\nq,a,2,1\nq,b,1,0\n", encoding="utf-8")
+            candidate.write_text("query_id,item_id,score,relevance\nq,a,1,1\nq,b,2,0\n", encoding="utf-8")
+            saved_hashes = {path: digest(path) for path in (baseline, candidate)}
+            guard_identity = {"status": "available", "file": "regression_guard.py",
+                              "sha256": decision_hashes["regression_guard.py"]}
+            for name, drop, pin, status, exit_code in (
+                ("decline", "0", digest(baseline), "failed_drop", 1),
+                ("boundary", "1", digest(baseline), "pass", 0),
+                ("wrong baseline", "1", "0" * 64, "blocked", 1),
+            ):
+                target = workspace / ("guard " + name)
+                run("installed MRR guard " + name,
+                    [str(python), "-I", "-m", "rankprobe", "compare",
+                     "--run", f"baseline={baseline}", "--run", f"candidate={candidate}",
+                     "--cutoffs", "1", "--max-mrr-drop", "mrr@1=" + drop,
+                     "--min-guard-queries", "1", "--guard-baseline-sha256", pin,
+                     "--fail-on", "never", "--out", str(target)],
+                    cwd=workspace, environment=environment, expected_exit=exit_code)
+                checked = read_report(target, version, "compare", source_identity)
+                require(checked["regression_guard"]["status"] == status,
+                        "guard: declared decision differs")
+                require(checked["regression_guard"]["delta_right_minus_left"] == -1,
+                        "guard: original metric delta changed")
+                require(checked["provenance"]["regression_guard"]["source_identity"] == guard_identity,
+                        "guard: separate decision-source identity differs from wheel bytes")
+                html = (target / "report.html").read_text(encoding="utf-8")
+                require(guard_identity["sha256"] in html,
+                        "guard: HTML omits decision-source identity")
+            require(all(digest(path) == value for path, value in saved_hashes.items()),
+                    "guard: original inputs changed")
         require(digest(wheel) == wheel_hash, "source wheel changed during check")
     return {
         "status": "passed", "wheel": wheel.name, "wheel_sha256": wheel_hash,
@@ -349,6 +394,8 @@ def check(wheel: Path, checkout: Path) -> dict:
             "matched_pool_delta_zero": True, "report_source_hashes_match": True,
             "source_inputs_unchanged": True,
             "report_core_identity_matches_wheel": True,
+            "decision_module_inventory_declared": True,
+            "installed_guard_identity_and_decisions_match_wheel": bool(decision_hashes),
             "installed_entrypoints_reject_invalid_input": True,
             "installed_entrypoints_clean_retry_preserves_unknowns": True,
             "installed_entrypoints_preserve_existing_reports": True,

@@ -13,6 +13,7 @@ CORE_MODULES = {
     "__init__.py", "__main__.py", "audit.py", "cli.py", "demo.py",
     "io.py", "metrics.py", "model.py", "report.py",
 }
+DECISION_MODULES = {"regression_guard.py"}
 
 
 def copy_core_resources(destination):
@@ -29,7 +30,7 @@ def test_current_identity_covers_nine_modules_without_paths_or_source_text():
     current_modules = {
         item.name for item in package.iterdir() if item.is_file() and item.name.endswith(".py")
     }
-    assert current_modules == CORE_MODULES
+    assert current_modules == CORE_MODULES | DECISION_MODULES
     assert set(identity) == {"scheme", "status", "sha256", "files"}
     assert identity["scheme"] == "rankprobe-core-python-v1"
     assert identity["status"] == "available"
@@ -43,6 +44,23 @@ def test_current_identity_covers_nine_modules_without_paths_or_source_text():
     assert json.dumps(str(Path(rankprobe.__file__).resolve().parent))[1:-1] not in serialized
     assert "def _core_source_identity" not in serialized
     assert "import argparse" not in serialized
+
+
+def test_guard_module_has_separate_identity_without_changing_legacy_nine(tmp_path, monkeypatch):
+    package = copy_core_resources(tmp_path / "all source resources")
+    original = resources.files("rankprobe").joinpath("regression_guard.py").read_bytes()
+    (package / "regression_guard.py").write_bytes(original)
+    monkeypatch.setattr(cli, "files", lambda _package: package)
+    core = cli._core_source_identity()
+    guard = cli._guard_source_identity()
+    assert guard == {"status": "available", "file": "regression_guard.py",
+                     "sha256": hashlib.sha256(original).hexdigest()}
+    (package / "regression_guard.py").write_bytes(original + b"\n# Test-only guard resource change.\n")
+    assert cli._core_source_identity() == core
+    assert cli._guard_source_identity()["sha256"] != guard["sha256"]
+    (package / "regression_guard.py").unlink()
+    assert cli._core_source_identity() == core
+    assert cli._guard_source_identity() == {"status": "unavailable", "file": "regression_guard.py"}
 
 
 def test_changing_only_core_resource_bytes_changes_same_version_identity(tmp_path, monkeypatch):
