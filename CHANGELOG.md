@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0a9 — 2026-10-25
+
+- The local MTEB conversion recipe identifies a rejected score/ID by source file, subset/split and query/document pair while retaining the original validation detail. Full selected-scope validation still precedes new CSV creation.
+- Explain how to inspect the original export and retry with a new source/CSV/report path. Preserve identifiers, accepted values, record order and unknown labels; keep genuine ties rather than inventing scores to clear a finding.
+- Include the reviewed recipe and its recovery checks in the complete bundle and source distribution. The installable core has no new numerical behavior; previous releases remain unchanged. Developer-authored recovery checks do not establish independent adoption or human benefit.
+
 ## 0.1.0a8 — 2026-10-25
 
 - When a CSV header lacks required columns, explain comma separators, exact column names and a fresh export from the original producer. Keep the original, identifiers, values, supplied judgments, unknowns and row order; do not guess a different delimiter or rename fields.
