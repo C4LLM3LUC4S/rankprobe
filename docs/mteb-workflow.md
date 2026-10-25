@@ -94,7 +94,13 @@ for query_id, scores in selected.items():
     if not isinstance(scores, dict) or not scores:
         raise ValueError(f"Query {query_id!r} has no score mapping; not dropped")
     for document_id, score in scores.items():
-        row = Row(query_id, document_id, score)
+        try:
+            row = Row(query_id, document_id, score)
+        except ValueError as exc:
+            raise ValueError(
+                f"{source}: subset={subset!r}, split={split!r}, "
+                f"query={query_id!r}, document={document_id!r}: {exc}"
+            ) from exc
         rows.append(row)
 
 if source.read_bytes() != original:
@@ -132,7 +138,9 @@ macOS / Linux:
 
 Require conversion exit `0` before starting the audit. Two independent shell commands can continue after a failed conversion and audit a previous CSV at the same path. The conditional blocks above stop that handoff; RankProbe's own completed-report exit `1` still has its [usual meaning](usage.md#exit-codes-and-automation).
 
-If conversion fails, keep its diagnostic and the existing files. Fix invalid source data in a new source export, or choose a new `destination` in the script when the old destination exists. Update the audit's CSV path to that exact destination, choose a new report directory, and rerun the conditional block. Do not audit an existing CSV merely because it parses or overwrite it to clear the error. A filesystem error during writing can also leave a partial CSV even though input validation finished first; require a successful fresh-output conversion before proceeding. Without judgments, label-dependent metrics are unverified; structural findings such as ties remain useful.
+If conversion fails, keep its diagnostic and the existing files. A rejected score or identifier names the source file, selected subset/split and query/document pair, followed by the original validation error. Use that location to inspect the source export; do not replace the score or missing labels with zero. The diagnostic contains local paths and IDs, so review it before sharing it.
+
+Fix invalid source data in a new source export, or choose a new `destination` in the script when the old destination exists. Update the audit's CSV path to that exact destination, choose a new report directory, and rerun the conditional block. Do not audit an existing CSV merely because it parses or overwrite it to clear the error. A filesystem error during writing can also leave a partial CSV even though input validation finished first; require a successful fresh-output conversion before proceeding. Without judgments, label-dependent metrics are unverified; structural findings such as ties remain useful.
 
 An original synthetic PowerShell handoff control reproduced conversion exit `1` for an existing CSV followed by a completed audit of that stale CSV under the former independent commands. The conditional form stops before creating a report; a fresh-output retry audits only the new source's selected scope. This is a command-orchestration check of the local bridge, not a new MTEB framework execution, outside adoption or measured human time saved.
 
