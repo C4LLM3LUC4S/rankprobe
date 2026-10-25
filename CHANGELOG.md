@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0a10 — 2026-10-26
+
+- Add an optional MRR regression guard for a pinned baseline and one new export. Declare a cutoff, maximum absolute drop and minimum query count before checking the candidate. The guard requires the same complete query/candidate/resolved-label population and fully eligible MRR queries; missing or restricted values block the check rather than becoming zero or a pass.
+- Save `pass`, `failed_drop` or `blocked` with reasons, policy and a separate decision-module source hash in both completed reports. A failed or blocked guard exits 1, including with `--fail-on never`; invalid input or failed output remains exit 2. Ordinary comparisons without guard flags are unchanged. The baseline pin checks only that file; freeze the judgments and protocol separately in the owning CI configuration.
+- Keep the legacy nine-module core identity schema and inventory; actual hashes identify the current file bytes. Check the new decision module separately in fresh-wheel installation. Clarify that integer-precision and small-gain numerical corrections were already included in earlier releases; this version does not introduce another metric formula change.
+- Ship new matching offline assets and source while preserving older releases. The tolerance is a declared engineering rule, not statistical significance, benchmark provenance, model-quality certification or independent-user evidence.
+
 ## 0.1.0a9 — 2026-10-25
 
 - The local MTEB conversion recipe identifies a rejected score/ID by source file, subset/split and query/document pair while retaining the original validation detail. Full selected-scope validation still precedes new CSV creation.

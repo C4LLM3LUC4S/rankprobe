@@ -125,6 +125,11 @@ Its fixture paths are relative to `source/`; run `cd source` first and use the
 environment interpreter one directory above (`..\\.venv\\Scripts\\python.exe`
 on Windows, `../.venv/bin/python` on macOS/Linux).
 
+To check a predeclared MRR drop rule in CI, follow
+[the optional guard guide](source/docs/mrr-regression.md) with the installed full CLI.
+先固定基线、标签、协议和门槛，再按 [MRR 检查步骤](source/docs/mrr-regression.md)
+检查新导出。`quickstart.py` 不提供这三个参数；完整报告会保留通过、超限或条件不足的原因。
+
 [中文说明](source/README.zh-CN.md) · [Input contract](source/docs/input-format.md)
 · [Limitations](source/docs/limitations.md) · [MIT license](source/LICENSE)
 

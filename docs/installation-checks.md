@@ -5,7 +5,7 @@ Source tests and a successful build do not exercise the installed console launch
 ```sh
 python -m build
 python scripts/check_distribution.py
-python scripts/check_wheel_install.py --wheel dist/rankprobe-0.1.0a9-py3-none-any.whl
+python scripts/check_wheel_install.py --wheel dist/rankprobe-0.1.0a10-py3-none-any.whl
 ```
 
 Pass an exact wheel path for the version being checked. The checker does not select whichever old artifact happens to be present in `dist`. CI builds in a clean checkout, where its `dist/*.whl` expression resolves to one wheel.
@@ -16,6 +16,7 @@ Pass an exact wheel path for the version being checked. The checker does not sel
 | Fresh installation | A new virtual environment without inherited system packages, created outside the checkout in a path containing spaces |
 | Import source | The loaded module belongs to that environment; module, installed-distribution, and wheel versions agree |
 | Report implementation | Both reports' core-source identities agree with independently hashed Python files inside the exact wheel |
+| Optional MRR guard | A wheel containing the guard has its decision module hashed separately from the legacy nine-module core identity; actual installed decline, boundary-pass and pinned-baseline-blocked cases retain reports with the matching identities |
 | Dependencies | Only RankProbe is added beyond the environment's bundled bootstrap tools |
 | Entry points | Both isolated `python -I -m rankprobe` and the actual installed `rankprobe` launcher |
 | Error recovery | Each installed entry point rejects a late invalid score without output or input changes, accepts a corrected retry at the same paths, and refuses to replace the completed report without explicit overwrite |
@@ -28,7 +29,7 @@ The local wheel is passed as an escaped file URL with its computed `#sha256=` fr
 To save a compact local result, use a new output filename:
 
 ```sh
-python scripts/check_wheel_install.py --wheel dist/rankprobe-0.1.0a9-py3-none-any.whl --summary artifacts/wheel-check.json
+python scripts/check_wheel_install.py --wheel dist/rankprobe-0.1.0a10-py3-none-any.whl --summary artifacts/wheel-check.json
 ```
 
 An existing summary is refused. Original wheel and fixture bytes are checked before and after use. Temporary environments, copied inputs and reports are removed after the check; the optional summary contains aggregate checks and the wheel hash. A passing result demonstrates these specific installation flows, not benchmark validity, compatibility with every environment, or external adoption.

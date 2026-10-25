@@ -10,7 +10,7 @@ If you are trying it to give feedback, open the [trial record](validation-plan.m
 
 ## 1. Install locally
 
-Use Python 3.10 or newer. For the complete offline distribution, [download `RankProbe-0.1.0a9.zip`](https://github.com/C4LLM3LUC4S/rankprobe/releases/download/v0.1.0a9/RankProbe-0.1.0a9.zip), extract it and follow its `START_HERE.md`. To use the source-install commands below, obtain the default-branch checkout as shown in the [main README](../README.md) and enter the checkout root `rankprobe`. All example paths here are relative to that package folder. A wheel alone does not supply checkout paths; the complete bundle also includes them under `source/`. This release is hosted on GitHub, not PyPI.
+Use Python 3.10 or newer. For the complete offline distribution, [download `RankProbe-0.1.0a10.zip`](https://github.com/C4LLM3LUC4S/rankprobe/releases/download/v0.1.0a10/RankProbe-0.1.0a10.zip), extract it and follow its `START_HERE.md`. To use the source-install commands below, obtain the default-branch checkout as shown in the [main README](../README.md) and enter the checkout root `rankprobe`. All example paths here are relative to that package folder. A wheel alone does not supply checkout paths; the complete bundle also includes them under `source/`. This release is hosted on GitHub, not PyPI.
 
 On Windows, choose a short extraction path. If pip/ensurepip reports a long-path problem while creating the environment, start again from a shorter folder.
 
@@ -112,7 +112,7 @@ For saved MTEB retrieval predictions, use the [scope-specific score-file recipe]
 
 > I am testing RankProbe, an early open-source offline audit tool for recommendation and retrieval evaluation exports. It takes CSV/JSONL or TREC-style runs and creates local HTML/JSON reports about ties, duplicate candidates, query coverage, and uncertain labels. Would you try one small export you are allowed to inspect and tell me whether it reveals anything useful? It takes no API key and does not upload your input. You do not need to share the source data or the whole report. The documented synthetic example is a safe first step. This is an alpha trial; it does not certify benchmark correctness.
 
-Share the [complete GitHub distribution](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a9), [RankProbe package page](https://github.com/C4LLM3LUC4S/rankprobe) and [this walkthrough](https://github.com/C4LLM3LUC4S/rankprobe/blob/main/docs/try-it.md). The curated download contains RankProbe only; the original coursework remains in its separate repository. Sharing instructions is not evidence of external adoption.
+Share the [complete GitHub distribution](https://github.com/C4LLM3LUC4S/rankprobe/releases/tag/v0.1.0a10), [RankProbe package page](https://github.com/C4LLM3LUC4S/rankprobe) and [this walkthrough](https://github.com/C4LLM3LUC4S/rankprobe/blob/main/docs/try-it.md). The curated download contains RankProbe only; the original coursework remains in its separate repository. Sharing instructions is not evidence of external adoption.
 
 ## Six feedback questions
 

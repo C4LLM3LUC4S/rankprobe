@@ -528,7 +528,8 @@ jobs:
     needs: [test, python315-core, trec-reference, beir-workflow, recbole-workflow, rechorus-workflow, mteb-workflow]
     if: >-
       github.event_name == 'push' && github.ref == 'refs/heads/main' &&
-      startsWith(github.event.head_commit.message, 'Release RankProbe v0.1.0a9')
+      (github.event.head_commit.message == 'Release RankProbe v0.1.0a10' ||
+       startsWith(github.event.head_commit.message, fromJSON('"Release RankProbe v0.1.0a10\n"')))
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -546,7 +547,7 @@ jobs:
           python -m pip install --no-deps .
           python -m build
       - name: Verify the actual distributions
-        run: python scripts/check_distribution.py && python scripts/check_wheel_install.py --wheel dist/rankprobe-0.1.0a9-py3-none-any.whl
+        run: python scripts/check_distribution.py && python scripts/check_wheel_install.py --wheel dist/rankprobe-0.1.0a10-py3-none-any.whl
       - name: Bind the offline bundle to this public commit
         run: >-
           python scripts/build_release.py --dist dist --out release-assets
@@ -556,7 +557,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: >-
           python scripts/publish_github_release.py --assets release-assets
-          --notes docs/releases/0.1.0a9.md --publish
+          --notes docs/releases/0.1.0a10.md --publish
 
   recover-alpha6:
     name: Verify and publish original alpha-6 draft bytes
