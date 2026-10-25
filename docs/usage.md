@@ -13,6 +13,8 @@ python -m rankprobe compare --run baseline=examples/trec/baseline.run --run reor
 
 `compare` requires at least two distinctly named runs. A run name describes a report entry; it does not change query or item identity. `demo` uses a built-in, invented example that deliberately contains problems.
 
+For a predeclared CI tolerance, `compare` optionally accepts `--max-mrr-drop mrr@K=DROP`, `--min-guard-queries N` and `--guard-baseline-sha256 HEX` together. This strict two-run [MRR regression guard](mrr-regression.md) uses the first input as a pinned baseline and requires the whole submitted comparison population to be metric-eligible. It saves pass/failure/block reasons; failure or blocking returns 1 after report creation even with `--fail-on never`. No flags means the existing findings-only behavior.
+
 Start at **Comparison results** in the HTML report. It places submitted-run metrics beside results on the structurally matched queries and shows the matched right-minus-left delta. Metric cells retain their status, eligible-query count and reference. Structural matching does not guarantee that every matched query is metric-eligible. When eligibility or reference scope differs, the delta remains unavailable.
 
 Expand metric-coverage details for eligible query IDs, exclusion reasons and the corresponding JSON location. Lists shown in HTML are bounded; the JSON contains the full data stored by the engine. Findings include suggested next steps and local links to the relevant report section. These suggestions guide inspection; they do not change the protocol or automatically repair input data.

@@ -719,6 +719,21 @@ def render_html(report: Mapping[str, Any]) -> str:
     )
     if comparison_section:
         sections.insert(0, comparison_section)
+    guard = report.get("regression_guard")
+    if isinstance(guard, Mapping):
+        labels = {"pass": "满足已声明的容忍规则", "failed_drop": "MRR 下降超过门槛", "blocked": "条件不足，尚不能判断"}
+        reasons = guard.get("reasons", ())
+        explanation = "".join(f'<li>{_esc(item.get("message", ""))}</li>' for item in reasons if isinstance(item, Mapping))
+        sections.insert(0,
+            '<section id="regression-guard"><h2>这次回归检查怎样判定？ / MRR regression guard</h2>'
+            f'<p><strong>{_esc(labels.get(guard.get("status"), guard.get("status")))}</strong></p>'
+            f'<p lang="zh-CN">{_esc(guard.get("next_step"))}</p>'
+            f'<ul>{explanation}</ul>'
+            '<p lang="zh-CN">只按事先声明的绝对 MRR 容忍值判断，要求双方全部提交查询可比较且有资格计算。'
+            '未知不是零；通过不等于模型质量认证或统计显著。</p>'
+            f'<details><summary>门槛、完整范围和判定依据 / Declared rule and decision</summary>{_diagnostics(guard)}</details></section>'
+        )
+        result_navigation = '<a href="#regression-guard">回归检查 / MRR guard</a>' + result_navigation
     if report.get("demo_note"):
         sections.insert(
             0,
